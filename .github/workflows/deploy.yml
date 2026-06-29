@@ -1,0 +1,167 @@
+name: Deploy Frontend to VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    concurrency:
+      group: kessler-frontend-deploy
+      cancel-in-progress: false
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_WHATSAPP: ${{ secrets.NEXT_PUBLIC_WHATSAPP }}
+
+      - name: Package standalone build
+        run: |
+          mkdir -p deploy-package
+          cp -a .next/standalone/. deploy-package/
+          cp -a .next/static deploy-package/.next/static
+          [ -d public ] && cp -a public deploy-package/public
+          test -f deploy-package/server.js      || { echo "::error::server.js missing"; exit 1; }
+          test -f deploy-package/.next/BUILD_ID || { echo "::error::BUILD_ID missing"; exit 1; }
+          tar -czf frontend-release.tar.gz -C deploy-package .
+          echo "Package: $(du -sh frontend-release.tar.gz | cut -f1)"
+
+      - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" | tr -d '\r' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -t ed25519,rsa -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          cat > ~/.ssh/config << EOF
+          Host vps
+            HostName $VPS_HOST
+            User root
+            IdentityFile ~/.ssh/deploy_key
+            StrictHostKeyChecking accept-new
+            ConnectTimeout 30
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Test SSH
+        run: ssh vps "echo 'SSH connection OK'"
+
+      - name: Upload files
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_WHATSAPP: ${{ secrets.NEXT_PUBLIC_WHATSAPP }}
+        run: |
+          scp frontend-release.tar.gz vps:/tmp/frontend-release.tar.gz
+          scp deploy/nginx-kessler.conf vps:/tmp/nginx-kessler.conf
+          node -e "
+            const cfg = {
+              apps: [{
+                name: 'kessler-ui',
+                script: 'server.js',
+                cwd: '/var/www/kessler-ui',
+                max_memory_restart: '256M',
+                error_file: '/var/log/pm2/kessler-ui-error.log',
+                out_file: '/var/log/pm2/kessler-ui-out.log',
+                merge_logs: true,
+                env: {
+                  PORT: 3002,
+                  HOSTNAME: '0.0.0.0',
+                  NODE_ENV: 'production',
+                  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+                  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+                  NEXT_PUBLIC_WHATSAPP: process.env.NEXT_PUBLIC_WHATSAPP,
+                }
+              }]
+            };
+            require('fs').writeFileSync('/tmp/ecosystem.config.js',
+              'module.exports = ' + JSON.stringify(cfg, null, 2) + ';\n');
+          "
+          scp /tmp/ecosystem.config.js vps:/tmp/ecosystem.config.js
+
+      - name: Deploy frontend
+        run: |
+          ssh vps 'bash -s' << 'ENDSSH'
+            set -euo pipefail
+            APP_DIR="/var/www/kessler-ui"
+            mkdir -p /var/log/pm2
+
+            echo "--- Stop PM2 ---"
+            pm2 stop kessler-ui 2>/dev/null || true
+            pm2 delete kessler-ui 2>/dev/null || true
+
+            echo "--- Backup ---"
+            [ -d "$APP_DIR" ] && cp -a "$APP_DIR" "${APP_DIR}.backup.$(date +%Y%m%d%H%M%S)"
+
+            echo "--- Extract ---"
+            rm -rf "$APP_DIR"
+            mkdir -p "$APP_DIR"
+            tar -xzf /tmp/frontend-release.tar.gz -C "$APP_DIR"
+            rm -f /tmp/frontend-release.tar.gz
+
+            test -f "$APP_DIR/server.js" || { echo "FATAL: server.js missing"; exit 1; }
+
+            cp /tmp/ecosystem.config.js "$APP_DIR/ecosystem.config.js"
+            rm -f /tmp/ecosystem.config.js
+
+            echo "--- Start PM2 ---"
+            pm2 start "$APP_DIR/ecosystem.config.js"
+            pm2 save
+
+            echo "--- Health check ---"
+            sleep 6
+            HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' --max-time 10 http://localhost:3002/ || echo "000")
+            if [ "$HTTP_CODE" = "000" ]; then
+              echo "FATAL: Not responding on 3002"
+              pm2 logs kessler-ui --lines 30 --nostream 2>&1 || true
+              exit 1
+            fi
+            echo "Next.js: HTTP $HTTP_CODE"
+
+            ls -dt /var/www/kessler-ui.backup.* 2>/dev/null | tail -n +4 | xargs rm -rf 2>/dev/null || true
+          ENDSSH
+
+      - name: Deploy nginx config
+        run: |
+          ssh vps 'bash -s' << 'ENDSSH'
+            set -euo pipefail
+            cp /tmp/nginx-kessler.conf /etc/nginx/sites-available/kessler
+            rm -f /tmp/nginx-kessler.conf
+            ln -sf /etc/nginx/sites-available/kessler /etc/nginx/sites-enabled/kessler
+            nginx -t 2>&1
+            systemctl reload nginx
+            if [ -d /etc/letsencrypt/live/kessler.178-104-197-138.nip.io ]; then
+              certbot --nginx -d kessler.178-104-197-138.nip.io --non-interactive --redirect 2>&1 || true
+              echo "SSL re-applied"
+            else
+              echo "No SSL cert yet — provision certbot first"
+            fi
+            echo "Nginx updated"
+          ENDSSH
+
+      - name: Smoke test
+        run: |
+          sleep 3
+          HTTP_CODE=$(curl -sf -o /dev/null -w '%{http_code}' --max-time 15 "https://kessler.178-104-197-138.nip.io/" || echo "000")
+          echo "Site: HTTP $HTTP_CODE"
+          [ "$HTTP_CODE" != "502" ] && [ "$HTTP_CODE" != "000" ] || echo "::warning::Site unreachable ($HTTP_CODE)"
