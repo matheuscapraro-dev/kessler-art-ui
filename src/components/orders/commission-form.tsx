@@ -20,6 +20,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { commissionService } from "@/services/commissions";
+import { Celebrate } from "@/components/motion/celebrate";
 import { ApiError } from "@/lib/api-client";
 import { whatsappLink } from "@/lib/config";
 import type { Commission } from "@/types/orders";
@@ -220,7 +221,8 @@ function CommissionSuccess({ commission }: { commission: Commission }) {
     `Resumo: ${commission.description}`;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-8 text-center">
+    <div className="relative rounded-2xl border border-border bg-card p-8 text-center">
+      <Celebrate />
       <CheckCircle2 className="mx-auto size-12 text-primary" />
       <h2 className="mt-4 font-heading text-2xl">Encomenda recebida! 🧶</h2>
       <p className="mx-auto mt-2 max-w-md text-muted-foreground">

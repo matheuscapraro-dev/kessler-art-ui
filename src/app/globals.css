@@ -200,6 +200,19 @@
 .animate-float {
   animation: float-soft 7s ease-in-out infinite;
 }
+
+/* Faixa "feito à mão" deslizante (marquee) */
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+.ribbon-track {
+  animation: marquee 30s linear infinite;
+}
+.ribbon-marquee:hover .ribbon-track {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-float { animation: none; }
+  .animate-float,
+  .ribbon-track { animation: none; }
 }

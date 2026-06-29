@@ -21,6 +21,7 @@ import {
 import { PageHeader } from "@/components/layout/page-header";
 import { useCart } from "@/components/cart/cart-provider";
 import { orderService } from "@/services/orders";
+import { Celebrate } from "@/components/motion/celebrate";
 import { ApiError } from "@/lib/api-client";
 import { formatPrice } from "@/lib/format";
 import { whatsappLink } from "@/lib/config";
@@ -64,7 +65,8 @@ export default function CheckoutPage() {
       <>
         <PageHeader title="Pedido recebido!" />
         <div className="mx-auto max-w-md px-4 pb-16">
-          <div className="rounded-2xl border border-border bg-card p-8 text-center">
+          <div className="relative rounded-2xl border border-border bg-card p-8 text-center">
+            <Celebrate />
             <CheckCircle2 className="mx-auto size-12 text-primary" />
             <p className="mt-4 text-muted-foreground">
               Seu código é <strong className="text-foreground">{confirmedOrder.code}</strong>. Agora
