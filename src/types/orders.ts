@@ -41,6 +41,11 @@ export interface OrderSummary {
   createdAt: string;
 }
 
+export interface CommissionImage {
+  id: string;
+  url: string;
+}
+
 export interface Commission {
   id: string;
   code: string;
@@ -57,6 +62,7 @@ export interface Commission {
   status: CommissionStatus;
   adminNotes?: string | null;
   createdAt: string;
+  referenceImages: CommissionImage[];
 }
 
 export interface CommissionSummary {

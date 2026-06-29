@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +10,7 @@ import { CheckCircle2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   Form,
@@ -19,7 +21,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { commissionService } from "@/services/commissions";
+import { ReferenceImageUploader } from "@/components/orders/reference-image-uploader";
+import { commissionService, type CommissionReferenceInput } from "@/services/commissions";
 import { Celebrate } from "@/components/motion/celebrate";
 import { ApiError } from "@/lib/api-client";
 import { whatsappLink } from "@/lib/config";
@@ -42,6 +45,8 @@ export function CommissionForm() {
   const searchParams = useSearchParams();
   const ref = searchParams.get("ref") ?? undefined;
 
+  const [references, setReferences] = useState<CommissionReferenceInput[]>([]);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -62,6 +67,7 @@ export function CommissionForm() {
         ...values,
         desiredDeadline: values.desiredDeadline || null,
         referenceProductSlug: ref,
+        referenceImages: references,
       }),
   });
 
@@ -152,6 +158,14 @@ export function CommissionForm() {
                 </FormItem>
               )}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Fotos de referência (opcional)</Label>
+            <p className="text-sm text-muted-foreground">
+              Tem alguma imagem que te inspira? Anexe aqui — ajuda muito a entender o que você quer.
+            </p>
+            <ReferenceImageUploader value={references} onChange={setReferences} />
           </div>
         </section>
 

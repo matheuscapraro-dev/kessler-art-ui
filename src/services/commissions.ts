@@ -1,9 +1,14 @@
 import { api } from "@/lib/api-client";
 import type { Commission, CommissionStatus, CommissionSummary } from "@/types/orders";
 
+export interface CommissionReferenceInput {
+  storageKey: string;
+  url: string;
+}
+
 export interface CreateCommissionPayload {
   customerName: string;
-  customerEmail: string;
+  customerEmail?: string;
   customerPhone: string;
   description: string;
   desiredCategory?: string;
@@ -11,11 +16,19 @@ export interface CreateCommissionPayload {
   size?: string;
   desiredDeadline?: string | null;
   referenceProductSlug?: string;
+  referenceImages?: CommissionReferenceInput[];
 }
 
 export const commissionService = {
   create: (payload: CreateCommissionPayload): Promise<Commission> =>
     api.post<Commission>("/api/commissions", payload),
+
+  /** Sobe uma imagem de referência (antes de criar) e devolve os identificadores. */
+  uploadReferenceImage: (file: File): Promise<CommissionReferenceInput> => {
+    const fd = new FormData();
+    fd.append("file", file);
+    return api.upload<CommissionReferenceInput>("/api/commissions/reference-images", fd);
+  },
 
   track: (code: string, options?: RequestInit): Promise<Commission> =>
     api.get<Commission>(`/api/commissions/track/${code}`, options),
