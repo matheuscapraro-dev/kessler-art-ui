@@ -2,7 +2,9 @@ import Link from "next/link";
 import { ArrowRight, Heart, Package, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/catalog/product-card";
-import { YarnBall, StitchDivider } from "@/components/decor";
+import { YarnBall } from "@/components/decor";
+import { Reveal } from "@/components/motion/reveal";
+import { AnimatedStitch } from "@/components/motion/animated-stitch";
 import { catalogService } from "@/services/catalog";
 import type { ProductSummary } from "@/types/catalog";
 
@@ -29,7 +31,7 @@ export default async function HomePage() {
         </div>
 
         <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 md:grid-cols-2 md:py-24">
-          <div className="space-y-6">
+          <Reveal className="space-y-6">
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-card/80 px-3.5 py-1.5 text-xs font-medium text-primary shadow-soft">
               <YarnBall className="size-4" /> feito à mão, com tempo e carinho
             </span>
@@ -50,10 +52,10 @@ export default async function HomePage() {
                 <Link href="/galeria">Ver galeria</Link>
               </Button>
             </div>
-          </div>
+          </Reveal>
 
           {/* arte do hero: forma orgânica + anel de pontos + novelo flutuante */}
-          <div className="relative mx-auto aspect-square w-full max-w-md">
+          <Reveal delay={0.15} className="relative mx-auto aspect-square w-full max-w-md">
             <div className="blob absolute inset-0 -z-10 animate-float border-2 border-dashed border-primary/25" />
             <div className="blob flex h-full w-full items-center justify-center overflow-hidden border border-border/60 bg-gradient-to-br from-secondary via-muted to-accent/40 p-10 shadow-soft-lg">
               <p className="text-center font-heading text-2xl italic text-foreground/70">
@@ -63,7 +65,7 @@ export default async function HomePage() {
             </div>
             <YarnBall className="absolute -right-2 top-6 size-12 animate-float text-primary drop-shadow" />
             <Heart className="absolute -bottom-1 left-6 size-8 fill-primary/15 text-primary/60" />
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -85,8 +87,10 @@ export default async function HomePage() {
 
         {featured.length > 0 ? (
           <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
-            {featured.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {featured.map((p, i) => (
+              <Reveal key={p.id} delay={Math.min(i * 0.06, 0.4)}>
+                <ProductCard product={p} />
+              </Reveal>
             ))}
           </div>
         ) : (
@@ -97,27 +101,31 @@ export default async function HomePage() {
       </section>
 
       <div className="mx-auto max-w-3xl px-4 py-4">
-        <StitchDivider />
+        <AnimatedStitch />
       </div>
 
       {/* ── Como funciona ── */}
       <section className="bg-secondary/30">
         <div className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="mb-10 text-center font-heading text-3xl font-semibold">Como funciona</h2>
+          <Reveal>
+            <h2 className="mb-10 text-center font-heading text-3xl font-semibold">Como funciona</h2>
+          </Reveal>
           <div className="grid gap-6 md:grid-cols-3">
             {[
               { icon: Heart, title: "Escolha ou imagine", desc: "Navegue pela galeria ou descreva a peça dos seus sonhos." },
               { icon: Sparkles, title: "A gente combina tudo", desc: "Cores, tamanho e prazo acertados pelo WhatsApp, com carinho." },
               { icon: Package, title: "Feito à mão pra você", desc: "Cada ponto é único — e chega prontinho até você." },
             ].map(({ icon: Icon, title, desc }, i) => (
-              <div key={title} className="relative rounded-3xl bg-card p-7 shadow-soft">
-                <span className="absolute right-5 top-5 font-heading text-4xl text-primary/15">{i + 1}</span>
-                <span className="inline-flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Icon className="size-5" />
-                </span>
-                <h3 className="mt-4 font-heading text-xl">{title}</h3>
-                <p className="mt-1.5 text-sm text-muted-foreground">{desc}</p>
-              </div>
+              <Reveal key={title} delay={i * 0.12}>
+                <div className="relative h-full rounded-3xl bg-card p-7 shadow-soft">
+                  <span className="absolute right-5 top-5 font-heading text-4xl text-primary/15">{i + 1}</span>
+                  <span className="inline-flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <Icon className="size-5" />
+                  </span>
+                  <h3 className="mt-4 font-heading text-xl">{title}</h3>
+                  <p className="mt-1.5 text-sm text-muted-foreground">{desc}</p>
+                </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -125,19 +133,21 @@ export default async function HomePage() {
 
       {/* ── CTA ── */}
       <section className="mx-auto max-w-6xl px-4 py-16">
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-primary px-8 py-14 text-center text-primary-foreground shadow-soft-lg md:py-20">
-          <YarnBall className="absolute -left-6 -top-6 size-28 text-primary-foreground/10" />
-          <YarnBall className="absolute -bottom-8 -right-4 size-32 text-primary-foreground/10" />
-          <div className="relative">
-            <h2 className="font-heading text-3xl font-semibold md:text-4xl">Tem uma ideia na cabeça?</h2>
-            <p className="mx-auto mt-3 max-w-md text-primary-foreground/85">
-              Conte o que você imaginou e eu transformo em crochê, sob medida.
-            </p>
-            <Button asChild size="lg" variant="secondary" className="mt-7 shadow-soft">
-              <Link href="/encomendar">Começar minha encomenda</Link>
-            </Button>
+        <Reveal>
+          <div className="relative overflow-hidden rounded-[2.5rem] bg-primary px-8 py-14 text-center text-primary-foreground shadow-soft-lg md:py-20">
+            <YarnBall className="absolute -left-6 -top-6 size-28 text-primary-foreground/10" />
+            <YarnBall className="absolute -bottom-8 -right-4 size-32 text-primary-foreground/10" />
+            <div className="relative">
+              <h2 className="font-heading text-3xl font-semibold md:text-4xl">Tem uma ideia na cabeça?</h2>
+              <p className="mx-auto mt-3 max-w-md text-primary-foreground/85">
+                Conte o que você imaginou e eu transformo em crochê, sob medida.
+              </p>
+              <Button asChild size="lg" variant="secondary" className="mt-7 shadow-soft">
+                <Link href="/encomendar">Começar minha encomenda</Link>
+              </Button>
+            </div>
           </div>
-        </div>
+        </Reveal>
       </section>
     </>
   );

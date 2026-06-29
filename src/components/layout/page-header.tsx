@@ -1,4 +1,4 @@
-import { StitchDivider } from "@/components/decor";
+import { AnimatedStitch } from "@/components/motion/animated-stitch";
 
 export function PageHeader({
   title,
@@ -14,7 +14,7 @@ export function PageHeader({
         <p className="mx-auto mt-3 max-w-xl text-muted-foreground text-pretty">{subtitle}</p>
       )}
       <div className="mx-auto mt-5 w-32">
-        <StitchDivider />
+        <AnimatedStitch />
       </div>
     </div>
   );
