@@ -1,3 +1,5 @@
+import { StitchDivider } from "@/components/decor";
+
 export function PageHeader({
   title,
   subtitle,
@@ -11,6 +13,9 @@ export function PageHeader({
       {subtitle && (
         <p className="mx-auto mt-3 max-w-xl text-muted-foreground text-pretty">{subtitle}</p>
       )}
+      <div className="mx-auto mt-5 w-32">
+        <StitchDivider />
+      </div>
     </div>
   );
 }

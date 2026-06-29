@@ -143,12 +143,63 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Textura têxtil sutil (trama em xadrez bem leve) */
+    background-image:
+      repeating-linear-gradient(45deg, oklch(0.5 0.06 40 / 0.022) 0 1px, transparent 1px 7px),
+      repeating-linear-gradient(-45deg, oklch(0.5 0.06 40 / 0.022) 0 1px, transparent 1px 7px);
+    background-attachment: fixed;
   }
   html {
     @apply font-sans;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
   }
+  ::selection {
+    background: oklch(0.62 0.13 41 / 0.18);
+  }
+}
+
+@layer components {
+  /* Sombras quentes e suaves (em vez do cinza padrão) */
+  .shadow-soft {
+    box-shadow: 0 1px 2px oklch(0.45 0.05 40 / 0.06), 0 10px 28px -14px oklch(0.45 0.08 40 / 0.20);
+  }
+  .shadow-soft-lg {
+    box-shadow: 0 2px 4px oklch(0.45 0.05 40 / 0.07), 0 22px 48px -18px oklch(0.45 0.08 40 / 0.26);
+  }
+
+  /* Formas orgânicas para imagens/destaques */
+  .blob {
+    border-radius: 63% 37% 54% 46% / 49% 56% 44% 51%;
+  }
+  .blob-2 {
+    border-radius: 42% 58% 43% 57% / 56% 42% 58% 44%;
+  }
+
+  /* Casquinha de crochê (borda em semicírculos) — aplique a cor via text-color */
+  .crochet-trim {
+    height: 14px;
+    background-color: currentColor;
+    -webkit-mask: radial-gradient(11px at 50% 14px, #000 98%, #0000 101%) 0 0 / 22px 100% repeat-x;
+    mask: radial-gradient(11px at 50% 14px, #000 98%, #0000 101%) 0 0 / 22px 100% repeat-x;
+  }
+
+  /* Linha de "pontos" (running stitch) */
+  .stitch-line {
+    border: none;
+    border-top: 2px dashed oklch(0.62 0.13 41 / 0.4);
+  }
+}
+
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.animate-float {
+  animation: float-soft 7s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-float { animation: none; }
 }
