@@ -1,18 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MessageCircle, Plus } from "lucide-react";
+import { AlertTriangle, CalendarClock, Hammer, LayoutGrid, Plus, Search, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -24,284 +23,396 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DatePicker } from "@/components/ui/date-picker";
-import { commissionService } from "@/services/commissions";
+import { WorkCard } from "@/components/admin/kanban/work-card";
+import { WorkSheet } from "@/components/admin/kanban/work-sheet";
+import { columnAccent, deadlineInfo } from "@/components/admin/kanban/utils";
+import {
+  commissionService,
+  type CommissionTaskInput,
+  type CreateCommissionPayload,
+  type UpdateCommissionPayload,
+} from "@/services/commissions";
 import { ApiError } from "@/lib/api-client";
 import { formatPrice } from "@/lib/format";
-import { whatsappLink } from "@/lib/config";
 import {
   commissionStatusLabel,
+  commissionStatusOrder,
+  workTypeLabel,
   type CommissionStatus,
   type CommissionSummary,
+  type WorkType,
 } from "@/types/orders";
 
-const statuses = Object.keys(commissionStatusLabel) as CommissionStatus[];
+const QK = ["admin-commissions"] as const;
+const workTypes = Object.keys(workTypeLabel) as WorkType[];
 
-const emptyCreate = {
-  customerName: "",
-  customerEmail: "",
-  customerPhone: "",
-  description: "",
-  desiredCategory: "",
-  colors: "",
-  size: "",
-  desiredDeadline: "",
-  quotedPrice: "",
-};
+type SheetState = { mode: "create" | "edit"; status: CommissionStatus; code?: string };
 
-export default function AdminEncomendasPage() {
+export default function AdminAteliePage() {
   const qc = useQueryClient();
-  const [selected, setSelected] = useState<CommissionSummary | null>(null);
-  const [status, setStatus] = useState<CommissionStatus>("Nova");
-  const [notes, setNotes] = useState("");
-  const [price, setPrice] = useState("");
-  const [createOpen, setCreateOpen] = useState(false);
-  const [createForm, setCreateForm] = useState(emptyCreate);
+  const [sheet, setSheet] = useState<SheetState | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<WorkType | "all">("all");
+  const [search, setSearch] = useState("");
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
 
   const { data: commissions = [], isLoading } = useQuery({
-    queryKey: ["admin-commissions"],
+    queryKey: QK,
     queryFn: () => commissionService.list(),
   });
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-commissions"] });
+  const invalidate = () => qc.invalidateQueries({ queryKey: QK });
 
-  // Detalhe completo (com fotos de referência) ao abrir o "Gerenciar".
+  // Detalhe completo (fotos, tarefas, contato) ao abrir um cartão para editar.
   const { data: detail } = useQuery({
-    queryKey: ["admin-commission", selected?.code],
-    queryFn: () => commissionService.track(selected!.code),
-    enabled: !!selected,
+    queryKey: ["admin-commission", sheet?.code],
+    queryFn: () => commissionService.track(sheet!.code!),
+    enabled: sheet?.mode === "edit" && !!sheet?.code,
+    refetchOnWindowFocus: false,
   });
 
-  const save = useMutation<unknown, ApiError, void>({
-    mutationFn: async () => {
-      if (!selected) return;
-      if (price.trim() !== "") await commissionService.sendQuote(selected.id, Number(price));
-      await commissionService.update(selected.id, status, notes || undefined);
-    },
+  // ── Mutações ───────────────────────────────────────────────────────
+  const createMut = useMutation<unknown, ApiError, CreateCommissionPayload>({
+    mutationFn: (payload) => commissionService.createAdmin(payload),
     onSuccess: () => {
       invalidate();
-      toast.success("Encomenda atualizada.");
-      setSelected(null);
-    },
-    onError: (e) => toast.error(e.detail ?? "Falha ao salvar."),
-  });
-
-  const create = useMutation<unknown, ApiError, void>({
-    mutationFn: async () => {
-      const created = await commissionService.create({
-        customerName: createForm.customerName,
-        customerEmail: createForm.customerEmail || undefined,
-        customerPhone: createForm.customerPhone,
-        description: createForm.description,
-        desiredCategory: createForm.desiredCategory || undefined,
-        colors: createForm.colors || undefined,
-        size: createForm.size || undefined,
-        desiredDeadline: createForm.desiredDeadline || null,
-      });
-      if (createForm.quotedPrice.trim() !== "") {
-        await commissionService.sendQuote(created.id, Number(createForm.quotedPrice));
-      }
-    },
-    onSuccess: () => {
-      invalidate();
-      toast.success("Encomenda criada.");
-      setCreateOpen(false);
-      setCreateForm(emptyCreate);
+      toast.success("Trabalho criado.");
+      setSheet(null);
     },
     onError: (e) => toast.error(e.detail ?? "Não foi possível criar."),
   });
 
-  function openManage(c: CommissionSummary) {
-    setSelected(c);
-    setStatus(c.status);
-    setPrice(c.quotedPrice != null ? String(c.quotedPrice) : "");
-    setNotes("");
+  const updateMut = useMutation<unknown, ApiError, { id: string; payload: UpdateCommissionPayload }>({
+    mutationFn: ({ id, payload }) => commissionService.update(id, payload),
+    onSuccess: () => {
+      invalidate();
+      toast.success("Trabalho atualizado.");
+      setSheet(null);
+    },
+    onError: (e) => toast.error(e.detail ?? "Falha ao salvar."),
+  });
+
+  const tasksMut = useMutation<unknown, ApiError, { id: string; tasks: CommissionTaskInput[] }>({
+    mutationFn: ({ id, tasks }) => commissionService.setTasks(id, tasks),
+    onSuccess: () => invalidate(), // atualiza os contadores nos cartões
+    onError: (e) => toast.error(e.detail ?? "Falha ao salvar a checklist."),
+  });
+
+  const deleteMut = useMutation<unknown, ApiError, string>({
+    mutationFn: (id) => commissionService.remove(id),
+    onSuccess: () => {
+      invalidate();
+      toast.success("Trabalho excluído.");
+      setSheet(null);
+    },
+    onError: (e) => toast.error(e.detail ?? "Falha ao excluir."),
+  });
+
+  // Mover no quadro com atualização otimista.
+  const moveMut = useMutation<
+    unknown,
+    ApiError,
+    { id: string; status: CommissionStatus; position: number },
+    { prev?: CommissionSummary[] }
+  >({
+    mutationFn: ({ id, status, position }) => commissionService.move(id, status, position),
+    onMutate: async ({ id, status, position }) => {
+      await qc.cancelQueries({ queryKey: QK });
+      const prev = qc.getQueryData<CommissionSummary[]>(QK);
+      qc.setQueryData<CommissionSummary[]>(QK, (old = []) =>
+        old.map((c) => (c.id === id ? { ...c, status, position } : c))
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(QK, ctx.prev);
+      toast.error("Não foi possível mover o cartão.");
+    },
+    onSettled: () => invalidate(),
+  });
+
+  // ── Drag & drop ────────────────────────────────────────────────────
+  function computePosition(status: CommissionStatus, beforeId: string | null): number {
+    const list = commissions
+      .filter((c) => c.status === status && c.id !== draggingId)
+      .sort((a, b) => a.position - b.position);
+
+    if (!beforeId) {
+      const last = list.at(-1);
+      return last ? last.position + 1 : Date.now();
+    }
+    const idx = list.findIndex((c) => c.id === beforeId);
+    if (idx === -1) {
+      const last = list.at(-1);
+      return last ? last.position + 1 : Date.now();
+    }
+    const target = list[idx];
+    const prev = list[idx - 1];
+    return prev ? (prev.position + target.position) / 2 : target.position - 1;
   }
 
-  const createValid =
-    createForm.customerName.trim() !== "" &&
-    createForm.customerPhone.trim() !== "" &&
-    createForm.description.trim().length >= 10;
+  function drop(status: CommissionStatus, beforeId: string | null) {
+    const id = draggingId;
+    setDraggingId(null);
+    if (!id) return;
+    const current = commissions.find((c) => c.id === id);
+    const position = computePosition(status, beforeId);
+    // Evita chamada à toa quando solta no mesmo lugar.
+    if (current && current.status === status && beforeId === null) {
+      const colLast = commissions
+        .filter((c) => c.status === status)
+        .sort((a, b) => a.position - b.position)
+        .at(-1);
+      if (colLast?.id === id) return;
+    }
+    moveMut.mutate({ id, status, position });
+  }
+
+  const confirmDelete = (id: string) => setPendingDelete(id);
+
+  // ── Filtro ─────────────────────────────────────────────────────────
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return commissions.filter((c) => {
+      if (typeFilter !== "all" && c.type !== typeFilter) return false;
+      if (!q) return true;
+      return (
+        c.code.toLowerCase().includes(q) ||
+        (c.title ?? "").toLowerCase().includes(q) ||
+        (c.customerName ?? "").toLowerCase().includes(q) ||
+        c.description.toLowerCase().includes(q)
+      );
+    });
+  }, [commissions, typeFilter, search]);
+
+  const byStatus = (status: CommissionStatus) =>
+    filtered.filter((c) => c.status === status).sort((a, b) => a.position - b.position);
+
+  // Soma dos orçamentos visíveis numa coluna (mostrada no cabeçalho).
+  const columnTotal = (cards: CommissionSummary[]) =>
+    cards.reduce((sum, c) => sum + (c.quotedPrice ?? 0), 0);
+
+  // Resumo do topo — só conta o que está "em aberto" (não concluído/recusado).
+  const stats = useMemo(() => {
+    const open = commissions.filter((c) => c.status !== "Concluida" && c.status !== "Recusada");
+    let overdue = 0;
+    let soon = 0;
+    for (const c of open) {
+      const d = deadlineInfo(c.desiredDeadline);
+      if (d?.tone === "overdue") overdue++;
+      else if (d?.tone === "soon") soon++;
+    }
+    return {
+      open: open.length,
+      producing: commissions.filter((c) => c.status === "EmProducao").length,
+      overdue,
+      soon,
+    };
+  }, [commissions]);
+
+  const saving = createMut.isPending || updateMut.isPending;
+
+  const statItems = [
+    { icon: LayoutGrid, label: "Em aberto", value: stats.open, tone: "default" as const },
+    { icon: Hammer, label: "Em produção", value: stats.producing, tone: "default" as const },
+    { icon: CalendarClock, label: "A vencer", value: stats.soon, tone: "soon" as const },
+    { icon: AlertTriangle, label: "Atrasados", value: stats.overdue, tone: "overdue" as const },
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="font-heading text-2xl font-semibold">Encomendas</h1>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="size-4" /> Nova encomenda
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-2xl font-semibold">Ateliê</h1>
+          <p className="text-sm text-muted-foreground">
+            Suas encomendas e trabalhos, num quadro feito à mão. ✨
+          </p>
+        </div>
+        <Button onClick={() => setSheet({ mode: "create", status: "Nova" })}>
+          <Plus className="size-4" /> Novo trabalho
         </Button>
       </div>
 
-      {isLoading ? (
-        <p className="text-muted-foreground">Carregando...</p>
-      ) : commissions.length === 0 ? (
-        <p className="text-muted-foreground">Nenhuma encomenda ainda.</p>
-      ) : (
-        <ul className="space-y-3">
-          {commissions.map((c) => (
-            <li key={c.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4">
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">
-                  {c.code} · {c.customerName}
-                </p>
-                <p className="line-clamp-1 text-sm text-muted-foreground">{c.description}</p>
-              </div>
-              {c.quotedPrice != null && <Badge variant="secondary">{formatPrice(c.quotedPrice)}</Badge>}
-              <Badge>{commissionStatusLabel[c.status]}</Badge>
-              <Button size="sm" variant="outline" onClick={() => openManage(c)}>
-                Gerenciar
-              </Button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* ── Gerenciar ── */}
-      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Encomenda {selected?.code}</DialogTitle>
-          </DialogHeader>
-
-          {selected && (
-            <div className="space-y-4">
-              {/* contato */}
-              {detail && (
-                <div className="flex flex-wrap items-center gap-2 text-sm">
-                  <span className="font-medium">{detail.customerName}</span>
-                  {detail.customerEmail && <span className="text-muted-foreground">· {detail.customerEmail}</span>}
-                  <Button asChild size="xs" variant="outline" className="ml-auto">
-                    <a href={whatsappLink(`Olá! Sobre a encomenda ${detail.code}...`)} target="_blank" rel="noopener noreferrer">
-                      <MessageCircle className="size-3.5" /> WhatsApp
-                    </a>
-                  </Button>
-                </div>
+      {/* resumo */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {statItems.map(({ icon: Icon, label, value, tone }) => (
+          <div
+            key={label}
+            className={cn(
+              "flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-soft",
+              tone === "overdue" && value > 0 && "border-destructive/30 bg-destructive/5",
+              tone === "soon" && value > 0 && "border-chart-3/40 bg-chart-3/5",
+            )}
+          >
+            <span
+              className={cn(
+                "grid size-9 shrink-0 place-items-center rounded-xl",
+                tone === "overdue" && value > 0
+                  ? "bg-destructive/15 text-destructive"
+                  : tone === "soon" && value > 0
+                    ? "bg-chart-3/20 text-chart-4"
+                    : "bg-secondary/60 text-primary",
               )}
-
-              <p className="whitespace-pre-line rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
-                {detail?.description ?? selected.description}
-              </p>
-
-              {detail && (detail.desiredCategory || detail.colors || detail.size || detail.desiredDeadline) && (
-                <dl className="grid gap-2 text-sm sm:grid-cols-2">
-                  {detail.desiredCategory && <div><dt className="text-muted-foreground">Tipo</dt><dd>{detail.desiredCategory}</dd></div>}
-                  {detail.colors && <div><dt className="text-muted-foreground">Cores</dt><dd>{detail.colors}</dd></div>}
-                  {detail.size && <div><dt className="text-muted-foreground">Tamanho</dt><dd>{detail.size}</dd></div>}
-                  {detail.desiredDeadline && (
-                    <div><dt className="text-muted-foreground">Prazo</dt><dd>{new Date(detail.desiredDeadline).toLocaleDateString("pt-BR")}</dd></div>
-                  )}
-                </dl>
-              )}
-
-              {/* fotos de referência */}
-              {detail && detail.referenceImages.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Fotos de referência</p>
-                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                    {detail.referenceImages.map((img) => (
-                      <a key={img.id} href={img.url} target="_blank" rel="noopener noreferrer" className="relative aspect-square overflow-hidden rounded-lg border border-border bg-muted">
-                        <Image src={img.url} alt="" fill sizes="120px" className="object-cover" />
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select value={status} onValueChange={(v) => setStatus(v as CommissionStatus)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {statuses.map((s) => (
-                      <SelectItem key={s} value={s}>{commissionStatusLabel[s]}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="price">Orçamento (R$)</Label>
-                <Input id="price" type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Deixe em branco para não alterar" />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notas internas</Label>
-                <Textarea id="notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelected(null)}>Cancelar</Button>
-            <Button onClick={() => save.mutate()} disabled={save.isPending}>
-              {save.isPending ? "Salvando..." : "Salvar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Nova encomenda (manual) ── */}
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Nova encomenda</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="cn">Cliente *</Label>
-                <Input id="cn" value={createForm.customerName} onChange={(e) => setCreateForm({ ...createForm, customerName: e.target.value })} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="cp">WhatsApp *</Label>
-                <Input id="cp" value={createForm.customerPhone} onChange={(e) => setCreateForm({ ...createForm, customerPhone: e.target.value })} placeholder="(47) 99999-9999" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="ce">E-mail</Label>
-                <Input id="ce" type="email" value={createForm.customerEmail} onChange={(e) => setCreateForm({ ...createForm, customerEmail: e.target.value })} placeholder="opcional" />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="cd">O que a cliente quer *</Label>
-              <Textarea id="cd" rows={3} value={createForm.description} onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })} placeholder="Descreva a peça (mín. 10 caracteres)" />
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="ct">Tipo</Label>
-                <Input id="ct" value={createForm.desiredCategory} onChange={(e) => setCreateForm({ ...createForm, desiredCategory: e.target.value })} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="cc">Cores</Label>
-                <Input id="cc" value={createForm.colors} onChange={(e) => setCreateForm({ ...createForm, colors: e.target.value })} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="cs">Tamanho</Label>
-                <Input id="cs" value={createForm.size} onChange={(e) => setCreateForm({ ...createForm, size: e.target.value })} />
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex flex-col gap-1.5">
-                <Label>Prazo</Label>
-                <DatePicker value={createForm.desiredDeadline} onChange={(v) => setCreateForm({ ...createForm, desiredDeadline: v })} placeholder="Opcional" disablePast />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="cq">Orçamento (R$)</Label>
-                <Input id="cq" type="number" step="0.01" value={createForm.quotedPrice} onChange={(e) => setCreateForm({ ...createForm, quotedPrice: e.target.value })} placeholder="Opcional — já envia o orçamento" />
-              </div>
+            >
+              <Icon className="size-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xl font-semibold leading-none">{value}</p>
+              <p className="truncate text-xs text-muted-foreground">{label}</p>
             </div>
           </div>
+        ))}
+      </div>
 
+      {/* filtros */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por código, título, cliente…"
+            className="h-8 w-64 pl-8"
+          />
+        </div>
+        <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as WorkType | "all")}>
+          <SelectTrigger size="sm" className="w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os tipos</SelectItem>
+            {workTypes.map((t) => (
+              <SelectItem key={t} value={t}>
+                {workTypeLabel[t]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* quadro */}
+      {isLoading ? (
+        <BoardSkeleton />
+      ) : (
+        <div className="flex gap-4 overflow-x-auto pb-4">
+          {commissionStatusOrder.map((status) => {
+            const cards = byStatus(status);
+            const total = columnTotal(cards);
+            return (
+              <section
+                key={status}
+                className="flex w-72 shrink-0 flex-col"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => drop(status, null)}
+              >
+                {/* faixa de crochê no topo da coluna */}
+                <div className={cn("crochet-trim", columnAccent[status].replace("bg-", "text-"))} />
+                <header className="mb-2 mt-1.5 flex items-center gap-2 px-1">
+                  <h2 className="text-sm font-semibold">{commissionStatusLabel[status]}</h2>
+                  <span className="grid min-w-5 place-items-center rounded-full bg-secondary/60 px-1.5 text-xs font-medium text-secondary-foreground">
+                    {cards.length}
+                  </span>
+                  {total > 0 && (
+                    <span className="truncate text-[0.7rem] text-muted-foreground">{formatPrice(total)}</span>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="ml-auto text-muted-foreground hover:text-primary"
+                    onClick={() => setSheet({ mode: "create", status })}
+                    title="Novo trabalho nesta coluna"
+                  >
+                    <Plus />
+                  </Button>
+                </header>
+
+                <div className="flex min-h-28 flex-1 flex-col gap-2 rounded-2xl bg-secondary/15 p-2 ring-1 ring-inset ring-border/40">
+                  {cards.length === 0 ? (
+                    <div className="m-1 grid flex-1 place-items-center rounded-xl border border-dashed border-border/70 px-2 py-8 text-center">
+                      <p className="text-xs text-muted-foreground">Arraste um cartão para cá</p>
+                    </div>
+                  ) : (
+                    cards.map((work) => (
+                      <WorkCard
+                        key={work.id}
+                        work={work}
+                        dragging={draggingId === work.id}
+                        onOpen={() => setSheet({ mode: "edit", status: work.status, code: work.code })}
+                        onDragStart={() => setDraggingId(work.id)}
+                        onDragEnd={() => setDraggingId(null)}
+                        onDropBefore={() => drop(status, work.id)}
+                        onMoveTo={(to) => moveMut.mutate({ id: work.id, status: to, position: computePosition(to, null) })}
+                        onDelete={() => confirmDelete(work.id)}
+                      />
+                    ))
+                  )}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      )}
+
+      <WorkSheet
+        open={!!sheet}
+        onOpenChange={(o) => !o && setSheet(null)}
+        mode={sheet?.mode ?? "create"}
+        detail={sheet?.mode === "edit" ? detail ?? null : null}
+        defaultStatus={sheet?.status ?? "Nova"}
+        saving={saving}
+        onCreate={(payload) => createMut.mutate(payload)}
+        onUpdate={(payload) => detail && updateMut.mutate({ id: detail.id, payload })}
+        onSaveTasks={(tasks) => detail && tasksMut.mutate({ id: detail.id, tasks })}
+        onDelete={() => detail && confirmDelete(detail.id)}
+      />
+
+      {/* confirmar exclusão (no tema, em vez do confirm nativo) */}
+      <Dialog open={!!pendingDelete} onOpenChange={(o) => !o && setPendingDelete(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <span className="grid size-8 place-items-center rounded-full bg-destructive/10 text-destructive">
+                <Trash2 className="size-4" />
+              </span>
+              Excluir trabalho
+            </DialogTitle>
+            <DialogDescription>
+              Tem certeza? Esta ação não pode ser desfeita e o cartão sai do quadro para sempre.
+            </DialogDescription>
+          </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancelar</Button>
-            <Button onClick={() => create.mutate()} disabled={create.isPending || !createValid}>
-              {create.isPending ? "Criando..." : "Criar encomenda"}
+            <Button variant="outline" onClick={() => setPendingDelete(null)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleteMut.isPending}
+              onClick={() => {
+                if (pendingDelete) deleteMut.mutate(pendingDelete);
+                setPendingDelete(null);
+              }}
+            >
+              {deleteMut.isPending ? "Excluindo..." : "Excluir"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function BoardSkeleton() {
+  return (
+    <div className="flex gap-4 overflow-x-auto pb-4">
+      {Array.from({ length: 5 }).map((_, col) => (
+        <div key={col} className="flex w-72 shrink-0 flex-col gap-2">
+          <Skeleton className="h-6 w-32" />
+          <div className="flex flex-col gap-2 rounded-2xl bg-secondary/15 p-2">
+            {Array.from({ length: 2 + (col % 2) }).map((_, i) => (
+              <Skeleton key={i} className="h-24 rounded-2xl" />
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

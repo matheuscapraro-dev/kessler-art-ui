@@ -39,6 +39,14 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${config.apiUrl}${path}`, { ...options, headers });
 
   if (!res.ok) {
+    // Token expirado/inválido numa rota autenticada: limpa a sessão e manda pro login,
+    // em vez de deixar o admin "logado" recebendo 401 em toda chamada.
+    if (res.status === 401 && token && typeof window !== "undefined") {
+      clearToken();
+      if (!window.location.pathname.startsWith("/admin/login")) {
+        window.location.assign("/admin/login?expirado=1");
+      }
+    }
     const body = await res.json().catch(() => ({ detail: res.statusText, status: res.status }));
     throw new ApiError({ ...body, status: body.status ?? res.status });
   }

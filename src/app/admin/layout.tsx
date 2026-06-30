@@ -14,7 +14,7 @@ const nav = [
   { href: "/admin/produtos", label: "Peças", icon: Package },
   { href: "/admin/categorias", label: "Categorias", icon: Tags },
   { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag },
-  { href: "/admin/encomendas", label: "Encomendas", icon: Sparkles },
+  { href: "/admin/encomendas", label: "Ateliê", icon: Sparkles },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -85,7 +85,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Link>
           ))}
         </div>
-        <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+        <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
       </div>
     </div>
   );

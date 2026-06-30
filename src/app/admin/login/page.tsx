@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,10 +28,18 @@ type FormValues = z.infer<typeof schema>;
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const [expired, setExpired] = useState(false);
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { email: "", password: "" },
   });
+
+  // Sessão expirada (token inválido) vem do api-client com ?expirado=1.
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setExpired(new URLSearchParams(window.location.search).has("expirado"));
+    }
+  }, []);
 
   const mutation = useMutation<unknown, ApiError, FormValues>({
     mutationFn: (values) => authService.login(values.email, values.password),
@@ -44,6 +53,12 @@ export default function AdminLoginPage() {
           <p className="font-heading text-2xl font-semibold">Kessler Art Crochê</p>
           <p className="text-sm text-muted-foreground">Painel da artista</p>
         </div>
+
+        {expired && (
+          <p className="rounded-lg bg-secondary/60 px-3 py-2 text-center text-sm text-secondary-foreground">
+            Sua sessão expirou. Entre novamente para continuar. 🧶
+          </p>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit((v) => mutation.mutate(v))} className="space-y-4">
