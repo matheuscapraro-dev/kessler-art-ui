@@ -170,6 +170,11 @@
     box-shadow: 0 2px 4px oklch(0.45 0.05 40 / 0.07), 0 22px 48px -18px oklch(0.45 0.08 40 / 0.26);
   }
 
+  /* Tom quente nas fotos (atmosfera de ateliê) */
+  .warm-img {
+    filter: sepia(0.12) saturate(1.06) contrast(1.02) brightness(0.99);
+  }
+
   /* Formas orgânicas para imagens/destaques */
   .blob {
     border-radius: 63% 37% 54% 46% / 49% 56% 44% 51%;
