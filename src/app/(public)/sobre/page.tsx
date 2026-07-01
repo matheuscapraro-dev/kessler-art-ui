@@ -6,6 +6,11 @@ import { AboutPhoto } from "@/components/about/about-photo";
 import { YarnBall } from "@/components/decor";
 import { Reveal } from "@/components/motion/reveal";
 import { AnimatedStitch } from "@/components/motion/animated-stitch";
+import { contentService } from "@/services/content";
+import { safe } from "@/lib/fetch-safe";
+import type { SiteContent } from "@/types/content";
+
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Sobre",
@@ -13,12 +18,29 @@ export const metadata: Metadata = {
     "A alma por trás dos fios da Kessler Art Crochê: criação consciente, feita à mão, um ponto de cada vez.",
 };
 
-const galeria = [
+// Fallback quando ainda não há conteúdo cadastrado.
+const defaults = {
+  aboutTitle: "Crochê com propósito e carinho",
+  aboutIntro:
+    "Num mundo acelerado, a Kessler Art Crochê é um refúgio de criação consciente. " +
+    "Cada ponto é uma pequena meditação; cada peça, uma história contada com fios e mãos pacientes. " +
+    "Aqui o tempo é ingrediente — não obstáculo.",
+  aboutStoryTitle: "Nossa história",
+  aboutStory:
+    "Tudo começou com uma agulha, um novelo e a vontade de criar com as próprias mãos. " +
+    "A Kessler Art Crochê nasceu desse encontro entre afeto e ofício.\n\n" +
+    "Não fazemos só peças — fazemos pequenas heranças táteis. Cada criação celebra a beleza do " +
+    "feito à mão e a imperfeição perfeita que só o trabalho artesanal carrega.",
+};
+
+const galeriaPlaceholder = [
   { caption: "No ateliê", tint: "terracotta" as const },
   { caption: "Fios naturais", tint: "sage" as const },
   { caption: "Detalhes à mão", tint: "cream" as const },
   { caption: "Cores da estação", tint: "terracotta" as const },
 ];
+
+const tints = ["terracotta", "sage", "cream"] as const;
 
 const processo = [
   {
@@ -40,7 +62,21 @@ const processo = [
 
 const valores = ["Feito à mão", "Peça única", "Fibras de qualidade", "Sob medida", "Com tempo e carinho"];
 
-export default function SobrePage() {
+export default async function SobrePage() {
+  const content = await safe<SiteContent | null>(
+    () => contentService.get({ next: { revalidate: 60 } }),
+    null
+  );
+
+  const aboutTitle = content?.aboutTitle?.trim() || defaults.aboutTitle;
+  const aboutIntro = content?.aboutIntro?.trim() || defaults.aboutIntro;
+  const storyTitle = content?.aboutStoryTitle?.trim() || defaults.aboutStoryTitle;
+  const story = content?.aboutStory?.trim() || defaults.aboutStory;
+  const storyParagraphs = story.split(/\n\n+/);
+  const photos = content?.aboutPhotos ?? [];
+  const heroPhoto = photos[0];
+  const galeria = photos.slice(1); // as demais fotos viram a mini-galeria
+
   return (
     <>
       {/* ── Hero ── */}
@@ -56,20 +92,20 @@ export default function SobrePage() {
               <YarnBall className="size-4" /> a alma por trás dos fios
             </p>
             <h1 className="font-heading text-5xl font-semibold leading-[1.05] text-balance md:text-6xl">
-              Crochê com <span className="italic text-primary">propósito</span> e carinho
+              {aboutTitle}
             </h1>
             <p className="max-w-xl text-lg leading-relaxed text-muted-foreground text-pretty">
-              Num mundo acelerado, a Kessler Art Crochê é um refúgio de criação consciente.
-              Cada ponto é uma pequena meditação; cada peça, uma história contada com fios e
-              mãos pacientes. Aqui o tempo é ingrediente — não obstáculo.
+              {aboutIntro}
             </p>
           </Reveal>
 
           <Reveal delay={0.15} className="relative mx-auto w-full max-w-md">
             <div aria-hidden className="blob absolute -inset-3 -z-10 animate-float border-2 border-dashed border-primary/25" />
             <AboutPhoto
+              src={heroPhoto?.url}
+              alt={heroPhoto?.caption ?? "Kessler Art Crochê"}
               tint="terracotta"
-              caption="Feito à mão, com tempo"
+              caption={heroPhoto?.caption ?? "Feito à mão, com tempo"}
               priority
               className="aspect-[4/5] rotate-1 transition-transform duration-700 hover:rotate-0"
             />
@@ -86,9 +122,13 @@ export default function SobrePage() {
           </h2>
         </Reveal>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {galeria.map((g, i) => (
-            <Reveal key={g.caption} delay={i * 0.08}>
+          {(galeria.length > 0
+            ? galeria.map((p, i) => ({ key: p.id, src: p.url, caption: p.caption ?? undefined, tint: tints[i % tints.length] }))
+            : galeriaPlaceholder.map((g) => ({ key: g.caption, src: undefined, caption: g.caption, tint: g.tint }))
+          ).map((g, i) => (
+            <Reveal key={g.key} delay={i * 0.08}>
               <AboutPhoto
+                src={g.src}
                 tint={g.tint}
                 caption={g.caption}
                 sizes="(max-width: 768px) 50vw, 25vw"
@@ -108,25 +148,21 @@ export default function SobrePage() {
         <div className="overflow-hidden rounded-[2.5rem] bg-secondary/30 p-6 shadow-soft md:p-12">
           <div className="flex flex-col items-center gap-10 md:flex-row-reverse">
             <Reveal className="w-full space-y-5 md:w-1/2">
-              <h2 className="font-heading text-3xl font-semibold text-primary">Nossa história</h2>
-              <p className="leading-relaxed text-muted-foreground">
-                Tudo começou com uma agulha, um novelo e a vontade de criar com as próprias mãos.
-                A <strong className="font-semibold text-foreground">Kessler Art Crochê</strong> nasceu
-                desse encontro entre afeto e ofício.
-              </p>
-              <p className="leading-relaxed text-muted-foreground">
-                Não fazemos só peças — fazemos pequenas heranças táteis. Cada criação celebra a beleza
-                do feito à mão e a imperfeição perfeita que só o trabalho artesanal carrega.
-              </p>
+              <h2 className="font-heading text-3xl font-semibold text-primary">{storyTitle}</h2>
+              {storyParagraphs.map((p, i) => (
+                <p key={i} className="whitespace-pre-line leading-relaxed text-muted-foreground">
+                  {p}
+                </p>
+              ))}
             </Reveal>
 
             <div className="w-full md:w-1/2">
               <div className="grid grid-cols-2 gap-4">
                 <Reveal>
-                  <AboutPhoto tint="cream" sizes="(max-width: 768px) 50vw, 25vw" className="aspect-[3/4]" />
+                  <AboutPhoto src={photos[1]?.url} tint="cream" sizes="(max-width: 768px) 50vw, 25vw" className="aspect-[3/4]" />
                 </Reveal>
                 <Reveal delay={0.12}>
-                  <AboutPhoto tint="sage" sizes="(max-width: 768px) 50vw, 25vw" className="aspect-[3/4] translate-y-6" />
+                  <AboutPhoto src={photos[2]?.url} tint="sage" sizes="(max-width: 768px) 50vw, 25vw" className="aspect-[3/4] translate-y-6" />
                 </Reveal>
               </div>
             </div>

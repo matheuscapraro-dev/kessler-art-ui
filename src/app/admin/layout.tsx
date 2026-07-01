@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, LogOut, Package, ShoppingBag, Sparkles, Tags } from "lucide-react";
+import { FileText, LayoutDashboard, LogOut, Package, ShoppingBag, Sparkles, Tags } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { getToken } from "@/lib/api-client";
@@ -15,6 +15,7 @@ const nav = [
   { href: "/admin/categorias", label: "Categorias", icon: Tags },
   { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingBag },
   { href: "/admin/encomendas", label: "Ateliê", icon: Sparkles },
+  { href: "/admin/conteudo", label: "Conteúdo", icon: FileText },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
