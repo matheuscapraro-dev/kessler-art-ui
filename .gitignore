@@ -37,9 +37,6 @@ yarn-error.log*
 # MCP (contém API key do Stitch)
 .mcp.json
 
-# Pasta aninhada acidental (checkout duplicado) — não faz parte do projeto
-/kessler-ui/
-
 # vercel
 .vercel
 
