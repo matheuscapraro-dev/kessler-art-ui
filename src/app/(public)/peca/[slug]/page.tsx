@@ -51,13 +51,8 @@ export default async function ProductPage({
   if (!product) notFound();
 
   const isReady = product.availability === "ReadyToBuy";
-  const isMadeToOrder = product.availability === "MadeToOrder";
 
-  const priceLabel = isReady
-    ? formatPrice(product.price)
-    : isMadeToOrder
-      ? formatFromPrice(product.price)
-      : null;
+  const priceLabel = isReady ? formatPrice(product.price) : formatFromPrice(product.price);
 
   const waMessage = `Olá! Tenho interesse na peça "${product.name}". Pode me contar mais?`;
 
@@ -93,7 +88,7 @@ export default async function ProductPage({
             </p>
           )}
 
-          {isMadeToOrder && product.leadTimeDays != null && (
+          {!isReady && product.leadTimeDays != null && (
             <p className="inline-flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="size-4" /> Prazo de produção: ~{product.leadTimeDays} dias
             </p>
@@ -112,9 +107,7 @@ export default async function ProductPage({
               />
             ) : (
               <Button asChild size="lg">
-                <Link href={`/encomendar?ref=${product.slug}`}>
-                  {isMadeToOrder ? "Encomendar esta peça" : "Encomendar algo parecido"}
-                </Link>
+                <Link href={`/encomendar?ref=${product.slug}`}>Encomendar esta peça</Link>
               </Button>
             )}
             <Button asChild size="lg" variant="outline">

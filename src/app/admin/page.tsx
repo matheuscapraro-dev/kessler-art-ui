@@ -27,7 +27,7 @@ export default function AdminDashboard() {
     <div className="space-y-8">
       <div>
         <h1 className="font-heading text-3xl font-semibold">Olá, {user?.name ?? "Kessler"} 👋</h1>
-        <p className="text-muted-foreground">Um resumo do que está acontecendo na sua loja.</p>
+        <p className="text-muted-foreground">Um resumo do que está acontecendo no seu ateliê.</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -44,7 +44,7 @@ export default function AdminDashboard() {
         </Link>
         <Link href="/admin/categorias" className="rounded-2xl border border-border bg-card p-6 hover:border-primary/40">
           <p className="font-heading text-lg">Categorias</p>
-          <p className="text-sm text-muted-foreground">Organize a galeria e a loja.</p>
+          <p className="text-sm text-muted-foreground">Organize as peças da galeria.</p>
         </Link>
       </div>
     </div>

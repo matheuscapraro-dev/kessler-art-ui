@@ -19,7 +19,7 @@ export default function CarrinhoPage() {
         <div className="mx-auto max-w-md px-4 pb-16 text-center">
           <p className="text-muted-foreground">Seu carrinho está vazio por enquanto.</p>
           <Button asChild className="mt-6">
-            <Link href="/loja">Ver a loja</Link>
+            <Link href="/galeria">Ver a galeria</Link>
           </Button>
         </div>
       </>

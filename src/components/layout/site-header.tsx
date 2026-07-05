@@ -18,7 +18,6 @@ import {
 
 const navLinks = [
   { href: "/galeria", label: "Galeria" },
-  { href: "/loja", label: "Loja" },
   { href: "/encomendar", label: "Encomendar" },
   { href: "/sobre", label: "Sobre" },
   { href: "/contato", label: "Contato" },

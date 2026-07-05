@@ -9,7 +9,7 @@ export const catalogKeys = {
   categories: ["categories"] as const,
 };
 
-/** Lista peças com filtros — usado nas páginas interativas (galeria/loja). */
+/** Lista peças com filtros — usado nas páginas interativas do catálogo. */
 export function useProducts(params: ListProductsParams = {}) {
   return useQuery({
     queryKey: catalogKeys.products(params),

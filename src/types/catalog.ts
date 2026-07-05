@@ -1,4 +1,4 @@
-export type ProductAvailability = "Showcase" | "ReadyToBuy" | "MadeToOrder";
+export type ProductAvailability = "ReadyToBuy" | "MadeToOrder";
 
 export interface Category {
   id: string;
@@ -45,7 +45,17 @@ export interface Product {
 }
 
 export const availabilityLabel: Record<ProductAvailability, string> = {
-  Showcase: "Portfólio",
   ReadyToBuy: "Pronta entrega",
   MadeToOrder: "Sob encomenda",
+};
+
+/** Mapeia o slug de disponibilidade da URL (?disponibilidade=) para o enum da API. */
+export const availabilityFromSlug: Record<string, ProductAvailability> = {
+  "pronta-entrega": "ReadyToBuy",
+  "sob-encomenda": "MadeToOrder",
+};
+
+export const availabilitySlug: Record<ProductAvailability, string> = {
+  ReadyToBuy: "pronta-entrega",
+  MadeToOrder: "sob-encomenda",
 };

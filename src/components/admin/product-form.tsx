@@ -33,7 +33,7 @@ const schema = z
   .object({
     name: z.string().min(1, "Informe o nome."),
     categoryId: z.string().min(1, "Selecione uma categoria."),
-    availability: z.enum(["Showcase", "ReadyToBuy", "MadeToOrder"]),
+    availability: z.enum(["ReadyToBuy", "MadeToOrder"]),
     description: z.string().optional(),
     price: z.string().optional(),
     stockQuantity: z.string().optional(),
@@ -55,7 +55,7 @@ function toPayload(v: FormValues): ProductPayload {
     categoryId: v.categoryId,
     availability: v.availability,
     description: v.description || undefined,
-    price: v.availability === "Showcase" ? null : num(v.price),
+    price: num(v.price),
     stockQuantity: v.availability === "ReadyToBuy" ? num(v.stockQuantity) : null,
     leadTimeDays: v.availability === "MadeToOrder" ? num(v.leadTimeDays) : null,
     isFeatured: v.isFeatured,
@@ -75,7 +75,7 @@ export function ProductForm({ product }: { product?: Product }) {
     defaultValues: {
       name: product?.name ?? "",
       categoryId: product?.categoryId ?? "",
-      availability: product?.availability ?? "Showcase",
+      availability: product?.availability ?? "ReadyToBuy",
       description: product?.description ?? "",
       price: product?.price != null ? String(product.price) : "",
       stockQuantity: product?.stockQuantity != null ? String(product.stockQuantity) : "",
@@ -158,7 +158,6 @@ export function ProductForm({ product }: { product?: Product }) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Showcase">Portfólio (não vende)</SelectItem>
                     <SelectItem value="ReadyToBuy">Pronta entrega</SelectItem>
                     <SelectItem value="MadeToOrder">Sob encomenda</SelectItem>
                   </SelectContent>
@@ -169,53 +168,51 @@ export function ProductForm({ product }: { product?: Product }) {
           />
         </div>
 
-        {availability !== "Showcase" && (
-          <div className="grid gap-5 sm:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-3">
+          <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{availability === "MadeToOrder" ? "Preço a partir de (R$)" : "Preço (R$)"}</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.01" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          {availability === "ReadyToBuy" && (
             <FormField
               control={form.control}
-              name="price"
+              name="stockQuantity"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{availability === "MadeToOrder" ? "Preço a partir de (R$)" : "Preço (R$)"}</FormLabel>
+                  <FormLabel>Estoque</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" {...field} />
+                    <Input type="number" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            {availability === "ReadyToBuy" && (
-              <FormField
-                control={form.control}
-                name="stockQuantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Estoque</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-            {availability === "MadeToOrder" && (
-              <FormField
-                control={form.control}
-                name="leadTimeDays"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Prazo (dias)</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-          </div>
-        )}
+          )}
+          {availability === "MadeToOrder" && (
+            <FormField
+              control={form.control}
+              name="leadTimeDays"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Prazo (dias)</FormLabel>
+                  <FormControl>
+                    <Input type="number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+        </div>
 
         <FormField
           control={form.control}

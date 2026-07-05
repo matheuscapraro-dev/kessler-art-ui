@@ -9,9 +9,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
   const priceLabel =
     product.availability === "MadeToOrder"
       ? formatFromPrice(product.price)
-      : product.availability === "ReadyToBuy"
-        ? formatPrice(product.price)
-        : null;
+      : formatPrice(product.price);
 
   return (
     <Link

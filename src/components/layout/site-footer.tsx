@@ -23,7 +23,6 @@ export function SiteFooter() {
           <nav className="flex flex-col gap-2 text-sm">
             <span className="font-medium">Navegar</span>
             <Link href="/galeria" className="text-secondary-foreground/75 hover:text-secondary-foreground">Galeria</Link>
-            <Link href="/loja" className="text-secondary-foreground/75 hover:text-secondary-foreground">Loja</Link>
             <Link href="/encomendar" className="text-secondary-foreground/75 hover:text-secondary-foreground">Fazer encomenda</Link>
             <Link href="/sobre" className="text-secondary-foreground/75 hover:text-secondary-foreground">Sobre</Link>
           </nav>

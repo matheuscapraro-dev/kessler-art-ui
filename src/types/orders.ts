@@ -132,7 +132,7 @@ export const commissionStatusOrder: CommissionStatus[] = [
 export const workTypeLabel: Record<WorkType, string> = {
   Encomenda: "Encomenda",
   ProjetoPessoal: "Projeto pessoal",
-  Estoque: "Peça p/ loja",
+  Estoque: "Peça pronta",
   Amostra: "Amostra",
   Reparo: "Reparo",
   Presente: "Presente",

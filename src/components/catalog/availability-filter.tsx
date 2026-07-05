@@ -1,24 +1,20 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import type { Category } from "@/types/catalog";
+import { availabilitySlug } from "@/types/catalog";
 
 /**
- * Barra de filtro por categoria. Usa links (?categoria=slug) para manter SSR/SEO —
- * sem estado de cliente. Preserva o filtro de disponibilidade quando presente.
+ * Filtro por disponibilidade (Pronta entrega / Sob encomenda). Preserva o filtro de
+ * categoria atual na URL e usa links para manter SSR/SEO — sem estado de cliente.
  */
-export function CategoryFilter({
-  categories,
+export function AvailabilityFilter({
   basePath,
+  categoria,
   current,
-  disponibilidade,
 }: {
-  categories: Category[];
   basePath: string;
+  categoria?: string;
   current?: string;
-  disponibilidade?: string;
 }) {
-  if (categories.length === 0) return null;
-
   const chip = (active: boolean) =>
     cn(
       "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
@@ -27,7 +23,7 @@ export function CategoryFilter({
         : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
     );
 
-  const href = (categoria?: string) => {
+  const href = (disponibilidade?: string) => {
     const sp = new URLSearchParams();
     if (categoria) sp.set("categoria", categoria);
     if (disponibilidade) sp.set("disponibilidade", disponibilidade);
@@ -35,18 +31,17 @@ export function CategoryFilter({
     return qs ? `${basePath}?${qs}` : basePath;
   };
 
+  const options = [
+    { label: "Tudo", slug: undefined },
+    { label: "Pronta entrega", slug: availabilitySlug.ReadyToBuy },
+    { label: "Sob encomenda", slug: availabilitySlug.MadeToOrder },
+  ];
+
   return (
     <div className="flex flex-wrap gap-2">
-      <Link href={href()} className={chip(!current)}>
-        Todas
-      </Link>
-      {categories.map((category) => (
-        <Link
-          key={category.id}
-          href={href(category.slug)}
-          className={chip(current === category.slug)}
-        >
-          {category.name}
+      {options.map((opt) => (
+        <Link key={opt.label} href={href(opt.slug)} className={chip(current === opt.slug)}>
+          {opt.label}
         </Link>
       ))}
     </div>
