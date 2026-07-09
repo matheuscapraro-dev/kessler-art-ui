@@ -3,6 +3,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { HandmadeRibbon } from "@/components/handmade-ribbon";
 import { ScrollProgress } from "@/components/motion/scroll-progress";
 import { BackToTop } from "@/components/motion/back-to-top";
+import { WhatsAppFab } from "@/components/whatsapp-fab";
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -13,6 +14,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <HandmadeRibbon />
       <SiteFooter />
       <BackToTop />
+      <WhatsAppFab />
     </div>
   );
 }

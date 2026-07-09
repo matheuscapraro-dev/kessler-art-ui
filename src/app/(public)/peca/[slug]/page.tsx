@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Clock } from "lucide-react";
+import { ArrowLeft, Clock, MessageCircle, Package, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ProductGallery } from "@/components/catalog/product-gallery";
+import { ProductCard } from "@/components/catalog/product-card";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import { StitchDivider } from "@/components/decor";
 import { catalogService } from "@/services/catalog";
+import { safe } from "@/lib/fetch-safe";
 import { whatsappLink } from "@/lib/config";
 import { formatFromPrice, formatPrice } from "@/lib/format";
-import { availabilityLabel, type Product } from "@/types/catalog";
+import { availabilityLabel, type Product, type ProductSummary } from "@/types/catalog";
 
 export const revalidate = 60;
 
@@ -41,6 +44,17 @@ export async function generateMetadata({
   };
 }
 
+/** Peças da mesma categoria (ou outras, se faltar) para o "você também pode gostar". */
+async function getRelated(product: Product): Promise<ProductSummary[]> {
+  const all = await safe(
+    () => catalogService.listProducts({}, { next: { revalidate: 60 } }),
+    [] as ProductSummary[]
+  );
+  const others = all.filter((p) => p.slug !== product.slug);
+  const sameCategory = others.filter((p) => p.categoryName === product.categoryName);
+  return [...sameCategory, ...others.filter((p) => !sameCategory.includes(p))].slice(0, 4);
+}
+
 export default async function ProductPage({
   params,
 }: {
@@ -50,6 +64,7 @@ export default async function ProductPage({
   const product = await getProduct(slug);
   if (!product) notFound();
 
+  const related = await getRelated(product);
   const isReady = product.availability === "ReadyToBuy";
 
   const priceLabel = isReady ? formatPrice(product.price) : formatFromPrice(product.price);
@@ -116,8 +131,45 @@ export default async function ProductPage({
               </a>
             </Button>
           </div>
+
+          {/* Por que comprar tranquila — como funciona a compra artesanal */}
+          <ul className="space-y-3 rounded-2xl bg-secondary/30 p-5 text-sm">
+            <li className="flex items-start gap-3">
+              <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
+              <span>
+                <strong>Peça única, feita à mão.</strong> Pequenas variações de cor e ponto fazem
+                parte do charme.
+              </span>
+            </li>
+            <li className="flex items-start gap-3">
+              <MessageCircle className="mt-0.5 size-4 shrink-0 text-primary" />
+              <span>
+                <strong>Sem pagamento online.</strong> Você faz o pedido e combinamos o Pix e a
+                entrega pelo WhatsApp.
+              </span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Package className="mt-0.5 size-4 shrink-0 text-primary" />
+              <span>
+                <strong>Embalado com carinho</strong> — do ateliê direto para a sua casa.
+              </span>
+            </li>
+          </ul>
         </div>
       </div>
+
+      {/* ── Você também pode gostar ── */}
+      {related.length > 0 && (
+        <section className="mt-14">
+          <StitchDivider className="mb-10" />
+          <h2 className="mb-6 font-heading text-2xl font-semibold">Você também pode gostar</h2>
+          <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
+            {related.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </section>
+      )}
     </article>
   );
 }

@@ -23,7 +23,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.05]"
+            className="warm-img object-cover transition-transform duration-500 ease-out group-hover:scale-[1.05]"
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-1 text-muted-foreground/60">

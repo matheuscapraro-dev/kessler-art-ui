@@ -141,6 +141,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
   body {
     @apply bg-background text-foreground;
     /* Textura têxtil sutil (trama em xadrez bem leve) */
@@ -206,6 +211,15 @@
   animation: float-soft 7s ease-in-out infinite;
 }
 
+/* Pulso suave (anel que expande) — usado no passo atual da linha do tempo */
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 40%, transparent); }
+  70%, 100% { box-shadow: 0 0 0 9px transparent; }
+}
+.animate-pulse-ring {
+  animation: pulse-ring 2.2s ease-out infinite;
+}
+
 /* Faixa "feito à mão" deslizante (marquee) */
 @keyframes marquee {
   to { transform: translateX(-50%); }
@@ -219,5 +233,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .animate-float,
+  .animate-pulse-ring,
   .ribbon-track { animation: none; }
 }

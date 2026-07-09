@@ -239,9 +239,11 @@ function CommissionSuccess({ commission }: { commission: Commission }) {
       <Celebrate />
       <CheckCircle2 className="mx-auto size-12 text-primary" />
       <h2 className="mt-4 font-heading text-2xl">Encomenda recebida! 🧶</h2>
-      <p className="mx-auto mt-2 max-w-md text-muted-foreground">
-        Guardei tudo certinho. Seu código de acompanhamento é{" "}
-        <strong className="text-foreground">{commission.code}</strong>. Vamos combinar os
+      <p className="mt-4 inline-block rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 px-5 py-2.5 font-heading text-2xl tracking-wide text-primary">
+        {commission.code}
+      </p>
+      <p className="mx-auto mt-3 max-w-md text-muted-foreground">
+        Guardei tudo certinho — esse é o seu código de acompanhamento. Vamos combinar os
         detalhes e o orçamento pelo WhatsApp.
       </p>
       <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">

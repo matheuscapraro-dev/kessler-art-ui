@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Minus, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { PageHeader } from "@/components/layout/page-header";
 import { useCart } from "@/components/cart/cart-provider";
+import { YarnBall } from "@/components/decor";
 import { formatPrice } from "@/lib/format";
 
 export default function CarrinhoPage() {
@@ -17,10 +18,18 @@ export default function CarrinhoPage() {
       <>
         <PageHeader title="Seu carrinho" />
         <div className="mx-auto max-w-md px-4 pb-16 text-center">
-          <p className="text-muted-foreground">Seu carrinho está vazio por enquanto.</p>
-          <Button asChild className="mt-6">
-            <Link href="/galeria">Ver a galeria</Link>
-          </Button>
+          <YarnBall className="mx-auto size-12 text-primary/40" />
+          <p className="mt-4 text-muted-foreground">
+            Seu carrinho está vazio por enquanto — as peças da galeria adorariam morar aqui. 🧶
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Button asChild>
+              <Link href="/galeria">Ver a galeria</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/encomendar">Fazer uma encomenda</Link>
+            </Button>
+          </div>
         </div>
       </>
     );
@@ -40,13 +49,18 @@ export default function CarrinhoPage() {
               </div>
               <div className="flex flex-1 flex-col justify-between">
                 <div className="flex items-start justify-between gap-2">
-                  <Link href={`/peca/${item.slug}`} className="font-medium hover:underline">
-                    {item.name}
-                  </Link>
+                  <div>
+                    <Link href={`/peca/${item.slug}`} className="font-medium hover:underline">
+                      {item.name}
+                    </Link>
+                    {item.quantity > 1 && (
+                      <p className="text-xs text-muted-foreground">{formatPrice(item.price)} cada</p>
+                    )}
+                  </div>
                   <button
                     onClick={() => remove(item.productId)}
-                    className="text-muted-foreground hover:text-destructive"
-                    aria-label="Remover"
+                    className="text-muted-foreground transition-colors hover:text-destructive"
+                    aria-label={`Remover ${item.name}`}
                   >
                     <Trash2 className="size-4" />
                   </button>
@@ -57,6 +71,7 @@ export default function CarrinhoPage() {
                       variant="outline"
                       size="icon-sm"
                       onClick={() => setQuantity(item.productId, item.quantity - 1)}
+                      disabled={item.quantity <= 1}
                       aria-label="Diminuir"
                     >
                       <Minus className="size-3.5" />
@@ -97,6 +112,12 @@ export default function CarrinhoPage() {
           <p className="text-center text-xs text-muted-foreground">
             O pagamento é combinado por Pix/WhatsApp após o pedido.
           </p>
+          <Link
+            href="/galeria"
+            className="flex items-center justify-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="size-3.5" /> Continuar escolhendo
+          </Link>
         </aside>
       </div>
     </>

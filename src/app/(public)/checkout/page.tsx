@@ -68,9 +68,12 @@ export default function CheckoutPage() {
           <div className="relative rounded-2xl border border-border bg-card p-8 text-center">
             <Celebrate />
             <CheckCircle2 className="mx-auto size-12 text-primary" />
+            <p className="mt-5 inline-block rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 px-5 py-2.5 font-heading text-2xl tracking-wide text-primary">
+              {confirmedOrder.code}
+            </p>
             <p className="mt-4 text-muted-foreground">
-              Seu código é <strong className="text-foreground">{confirmedOrder.code}</strong>. Agora
-              é só combinar o pagamento (Pix) pelo WhatsApp que eu separo tudo com carinho.
+              Guarde esse código para acompanhar seu pedido. Agora é só combinar o pagamento (Pix)
+              pelo WhatsApp que eu separo tudo com carinho.
             </p>
             <div className="mt-6 flex flex-col gap-3">
               <Button asChild size="lg">
@@ -194,6 +197,9 @@ export default function CheckoutPage() {
             <span>Total</span>
             <span className="text-primary">{formatPrice(total)}</span>
           </div>
+          <p className="rounded-lg bg-secondary/40 px-3 py-2.5 text-xs text-muted-foreground">
+            Nada é cobrado agora: depois de confirmar, combinamos o Pix e a entrega pelo WhatsApp.
+          </p>
         </aside>
       </div>
     </>

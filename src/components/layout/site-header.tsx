@@ -10,6 +10,7 @@ import { useCart } from "@/components/cart/cart-provider";
 import { YarnBall } from "@/components/decor";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -43,18 +44,24 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
-                pathname.startsWith(link.href) && "text-foreground"
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const active = pathname.startsWith(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  active
+                    ? "text-foreground underline decoration-primary/70 decoration-dashed decoration-2 underline-offset-[10px]"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="flex items-center gap-2">
@@ -90,18 +97,28 @@ export function SiteHeader() {
                 <SheetTitle className="font-heading">Kessler Art Crochê</SheetTitle>
               </SheetHeader>
               <nav className="mt-2 flex flex-col gap-1 px-2">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="rounded-md px-3 py-2.5 text-base font-medium text-foreground hover:bg-muted"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-                <Button asChild className="mt-3">
-                  <Link href="/encomendar">Fazer encomenda</Link>
-                </Button>
+                {navLinks.map((link) => {
+                  const active = pathname.startsWith(link.href);
+                  return (
+                    <SheetClose asChild key={link.href}>
+                      <Link
+                        href={link.href}
+                        aria-current={active ? "page" : undefined}
+                        className={cn(
+                          "rounded-md px-3 py-2.5 text-base font-medium text-foreground hover:bg-muted",
+                          active && "bg-primary/10 text-primary"
+                        )}
+                      >
+                        {link.label}
+                      </Link>
+                    </SheetClose>
+                  );
+                })}
+                <SheetClose asChild>
+                  <Button asChild className="mt-3">
+                    <Link href="/encomendar">Fazer encomenda</Link>
+                  </Button>
+                </SheetClose>
               </nav>
             </SheetContent>
           </Sheet>

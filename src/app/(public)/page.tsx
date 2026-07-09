@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Heart, Package, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,8 @@ async function getFeatured(): Promise<ProductSummary[]> {
 
 export default async function HomePage() {
   const featured = (await getFeatured()).slice(0, 8);
+  // Foto de uma peça real no hero — o produto convence mais que qualquer arte.
+  const heroProduct = featured.find((p) => p.coverImageUrl);
 
   return (
     <>
@@ -57,12 +60,34 @@ export default async function HomePage() {
           {/* arte do hero: forma orgânica + anel de pontos + novelo flutuante */}
           <Reveal delay={0.15} className="relative mx-auto aspect-square w-full max-w-md">
             <div className="blob absolute inset-0 -z-10 animate-float border-2 border-dashed border-primary/25" />
-            <div className="blob flex h-full w-full items-center justify-center overflow-hidden border border-border/60 bg-gradient-to-br from-secondary via-muted to-accent/40 p-10 shadow-soft-lg">
-              <p className="text-center font-heading text-2xl italic text-foreground/70">
-                sua próxima peça favorita,
-                <br /> feita à mão
-              </p>
-            </div>
+            {heroProduct ? (
+              <Link
+                href={`/peca/${heroProduct.slug}`}
+                aria-label={`Ver a peça ${heroProduct.name}`}
+                className="group block h-full w-full"
+              >
+                <div className="blob relative h-full w-full overflow-hidden border border-border/60 bg-muted shadow-soft-lg">
+                  <Image
+                    src={heroProduct.coverImageUrl!}
+                    alt={heroProduct.name}
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 100vw, 40vw"
+                    className="warm-img object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                  />
+                </div>
+                <span className="absolute bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-primary/20 bg-card/90 px-3.5 py-1.5 text-xs font-medium text-foreground shadow-soft backdrop-blur transition-colors group-hover:text-primary">
+                  {heroProduct.name} <ArrowRight className="size-3.5" />
+                </span>
+              </Link>
+            ) : (
+              <div className="blob flex h-full w-full items-center justify-center overflow-hidden border border-border/60 bg-gradient-to-br from-secondary via-muted to-accent/40 p-10 shadow-soft-lg">
+                <p className="text-center font-heading text-2xl italic text-foreground/70">
+                  sua próxima peça favorita,
+                  <br /> feita à mão
+                </p>
+              </div>
+            )}
             <YarnBall className="absolute -right-2 top-6 size-12 animate-float text-primary drop-shadow" />
             <Heart className="absolute -bottom-1 left-6 size-8 fill-primary/15 text-primary/60" />
           </Reveal>
@@ -86,13 +111,22 @@ export default async function HomePage() {
         </div>
 
         {featured.length > 0 ? (
-          <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
-            {featured.map((p, i) => (
-              <Reveal key={p.id} delay={Math.min(i * 0.06, 0.4)}>
-                <ProductCard product={p} />
-              </Reveal>
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
+              {featured.map((p, i) => (
+                <Reveal key={p.id} delay={Math.min(i * 0.06, 0.4)}>
+                  <ProductCard product={p} />
+                </Reveal>
+              ))}
+            </div>
+            <div className="mt-6 text-center sm:hidden">
+              <Button asChild variant="outline">
+                <Link href="/galeria">
+                  Ver todas as peças <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+            </div>
+          </>
         ) : (
           <div className="rounded-3xl border border-dashed border-primary/30 bg-card/60 p-12 text-center text-muted-foreground shadow-soft">
             As peças em destaque aparecerão aqui em breve. 🧶

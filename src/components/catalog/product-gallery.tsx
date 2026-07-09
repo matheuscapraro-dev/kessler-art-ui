@@ -28,7 +28,7 @@ export function ProductGallery({ images, alt }: { images: ProductImage[]; alt: s
           alt={current.altText ?? alt}
           fill
           sizes="(max-width: 768px) 100vw, 50vw"
-          className="object-cover"
+          className="warm-img object-cover"
           priority
         />
       </div>
@@ -41,6 +41,7 @@ export function ProductGallery({ images, alt }: { images: ProductImage[]; alt: s
               type="button"
               onClick={() => setActiveId(img.id)}
               aria-label="Ver foto"
+              aria-pressed={img.id === activeId}
               className={cn(
                 "relative size-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors",
                 img.id === activeId ? "border-primary" : "border-transparent hover:border-border"

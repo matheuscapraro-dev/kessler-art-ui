@@ -23,7 +23,7 @@ export function CategoryFilter({
     cn(
       "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
       active
-        ? "border-primary bg-primary text-primary-foreground"
+        ? "border-primary bg-primary text-primary-foreground shadow-soft"
         : "border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
     );
 

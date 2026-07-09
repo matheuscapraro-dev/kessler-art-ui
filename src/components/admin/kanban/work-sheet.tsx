@@ -152,9 +152,13 @@ export function WorkSheet({
   const isEncomenda = form.type === "Encomenda";
   const contactVisible = isEncomenda || showContact;
 
+  // Na criação exigimos o briefing (e o contato, se for encomenda). Já na edição a
+  // artista pode salvar mesmo com os obrigatórios em branco — o update não altera o
+  // contato e o back-end aceita a descrição vazia.
   const valid =
-    form.description.trim().length >= 10 &&
-    (!isEncomenda || (form.customerName.trim() !== "" && form.customerPhone.trim() !== ""));
+    mode === "edit" ||
+    (form.description.trim().length >= 10 &&
+      (!isEncomenda || (form.customerName.trim() !== "" && form.customerPhone.trim() !== "")));
 
   function submit() {
     const deadline = form.desiredDeadline || null;
