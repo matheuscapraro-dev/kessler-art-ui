@@ -19,7 +19,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { PageHeader } from "@/components/layout/page-header";
-import { useCart } from "@/components/cart/cart-provider";
+import { cartLineKey, useCart } from "@/components/cart/cart-provider";
 import { orderService } from "@/services/orders";
 import { Celebrate } from "@/components/motion/celebrate";
 import { ApiError } from "@/lib/api-client";
@@ -49,7 +49,11 @@ export default function CheckoutPage() {
     mutationFn: (values) =>
       orderService.create({
         ...values,
-        items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+        items: items.map((i) => ({
+          productId: i.productId,
+          quantity: i.quantity,
+          variantId: i.variantId,
+        })),
       }),
     onSuccess: (order) => {
       setConfirmedOrder(order);
@@ -185,9 +189,10 @@ export default function CheckoutPage() {
           <h2 className="font-heading text-lg">Resumo</h2>
           <ul className="space-y-2 text-sm">
             {items.map((i) => (
-              <li key={i.productId} className="flex justify-between gap-2">
+              <li key={cartLineKey(i)} className="flex justify-between gap-2">
                 <span className="text-muted-foreground">
                   {i.quantity}× {i.name}
+                  {i.variantName ? ` · ${i.variantName}` : ""}
                 </span>
                 <span>{formatPrice(i.price * i.quantity)}</span>
               </li>

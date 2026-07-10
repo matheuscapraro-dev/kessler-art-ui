@@ -6,8 +6,9 @@ import { formatFromPrice, formatPrice } from "@/lib/format";
 import { availabilityLabel, type ProductSummary } from "@/types/catalog";
 
 export function ProductCard({ product }: { product: ProductSummary }) {
+  // Com tamanhos, o preço listado é o menor deles → "a partir de".
   const priceLabel =
-    product.availability === "MadeToOrder"
+    product.availability === "MadeToOrder" || product.hasVariants
       ? formatFromPrice(product.price)
       : formatPrice(product.price);
 

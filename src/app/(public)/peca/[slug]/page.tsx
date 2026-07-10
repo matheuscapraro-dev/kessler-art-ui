@@ -3,15 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, MessageCircle, Package, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { ProductGallery } from "@/components/catalog/product-gallery";
 import { ProductCard } from "@/components/catalog/product-card";
-import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import { ProductPurchasePanel } from "@/components/catalog/product-purchase-panel";
 import { StitchDivider } from "@/components/decor";
 import { catalogService } from "@/services/catalog";
 import { safe } from "@/lib/fetch-safe";
-import { whatsappLink } from "@/lib/config";
-import { formatFromPrice, formatPrice } from "@/lib/format";
 import { availabilityLabel, type Product, type ProductSummary } from "@/types/catalog";
 
 export const revalidate = 60;
@@ -67,10 +64,6 @@ export default async function ProductPage({
   const related = await getRelated(product);
   const isReady = product.availability === "ReadyToBuy";
 
-  const priceLabel = isReady ? formatPrice(product.price) : formatFromPrice(product.price);
-
-  const waMessage = `Olá! Tenho interesse na peça "${product.name}". Pode me contar mais?`;
-
   return (
     <article className="mx-auto max-w-6xl px-4 py-8 md:py-12">
       <Link
@@ -92,10 +85,10 @@ export default async function ProductPage({
               </span>
             </div>
             <h1 className="font-heading text-3xl font-semibold md:text-4xl">{product.name}</h1>
-            {priceLabel && (
-              <p className="text-2xl font-medium text-primary">{priceLabel}</p>
-            )}
           </div>
+
+          {/* Preço, tamanhos e ações (client component) */}
+          <ProductPurchasePanel product={product} />
 
           {product.description && (
             <p className="whitespace-pre-line leading-relaxed text-muted-foreground">
@@ -108,29 +101,6 @@ export default async function ProductPage({
               <Clock className="size-4" /> Prazo de produção: ~{product.leadTimeDays} dias
             </p>
           )}
-
-          <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-            {isReady ? (
-              <AddToCartButton
-                product={{
-                  productId: product.id,
-                  slug: product.slug,
-                  name: product.name,
-                  price: product.price ?? 0,
-                  coverImageUrl: product.images[0]?.url ?? null,
-                }}
-              />
-            ) : (
-              <Button asChild size="lg">
-                <Link href={`/encomendar?ref=${product.slug}`}>Encomendar esta peça</Link>
-              </Button>
-            )}
-            <Button asChild size="lg" variant="outline">
-              <a href={whatsappLink(waMessage)} target="_blank" rel="noopener noreferrer">
-                Falar no WhatsApp
-              </a>
-            </Button>
-          </div>
 
           {/* Por que comprar tranquila — como funciona a compra artesanal */}
           <ul className="space-y-3 rounded-2xl bg-secondary/30 p-5 text-sm">

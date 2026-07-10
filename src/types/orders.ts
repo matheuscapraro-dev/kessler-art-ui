@@ -15,6 +15,8 @@ export type PaymentStatus = "Pendente" | "Pago" | "Estornado";
 export interface OrderItem {
   productId: string;
   productName: string;
+  /** Tamanho escolhido (snapshot), quando a peça tem tamanhos. */
+  variantName?: string | null;
   unitPrice: number;
   quantity: number;
   lineTotal: number;

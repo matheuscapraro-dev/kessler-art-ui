@@ -8,6 +8,13 @@ export interface CategoryPayload {
   isPublished: boolean;
 }
 
+export interface ProductVariantPayload {
+  /** Nulo para tamanhos novos; presente para manter o Id (carrinhos não quebram). */
+  id?: string | null;
+  name: string;
+  price: number;
+}
+
 export interface ProductPayload {
   name: string;
   categoryId: string;
@@ -18,6 +25,7 @@ export interface ProductPayload {
   leadTimeDays?: number | null;
   isFeatured: boolean;
   isPublished: boolean;
+  variants: ProductVariantPayload[];
 }
 
 export const adminCatalogService = {

@@ -133,10 +133,16 @@ export default async function PedidoPage({ params }: { params: Promise<{ codigo:
         <div className="rounded-2xl border border-border bg-card">
           <h2 className="px-6 pt-5 font-heading text-lg">Itens do pedido</h2>
           <ul className="mt-2 divide-y divide-border">
-            {order.items.map((item) => (
-              <li key={item.productId} className="flex justify-between gap-2 px-6 py-3.5 text-sm">
+            {order.items.map((item, i) => (
+              <li
+                key={`${item.productId}-${item.variantName ?? i}`}
+                className="flex justify-between gap-2 px-6 py-3.5 text-sm"
+              >
                 <span>
                   <span className="text-muted-foreground">{item.quantity}×</span> {item.productName}
+                  {item.variantName && (
+                    <span className="text-muted-foreground"> · {item.variantName}</span>
+                  )}
                 </span>
                 <span>{formatPrice(item.lineTotal)}</span>
               </li>

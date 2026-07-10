@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +30,15 @@ import { adminCatalogService, type ProductPayload } from "@/services/admin-catal
 import { ApiError } from "@/lib/api-client";
 import type { Product } from "@/types/catalog";
 
+const variantSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1, "Dê um nome (ex.: P, M, G)."),
+  price: z
+    .string()
+    .min(1, "Informe o preço.")
+    .refine((s) => !Number.isNaN(Number(s)) && Number(s) >= 0, "Preço inválido."),
+});
+
 const schema = z
   .object({
     name: z.string().min(1, "Informe o nome."),
@@ -40,11 +50,18 @@ const schema = z
     leadTimeDays: z.string().optional(),
     isFeatured: z.boolean(),
     isPublished: z.boolean(),
+    variants: z.array(variantSchema),
   })
-  .refine((d) => d.availability !== "ReadyToBuy" || (!!d.price && Number(d.price) >= 0), {
-    message: "Informe um preço para peça pronta para venda.",
-    path: ["price"],
-  });
+  .refine(
+    (d) =>
+      d.availability !== "ReadyToBuy" ||
+      d.variants.length > 0 ||
+      (!!d.price && Number(d.price) >= 0),
+    {
+      message: "Informe um preço (ou adicione tamanhos com preço).",
+      path: ["price"],
+    }
+  );
 
 type FormValues = z.infer<typeof schema>;
 
@@ -55,11 +72,17 @@ function toPayload(v: FormValues): ProductPayload {
     categoryId: v.categoryId,
     availability: v.availability,
     description: v.description || undefined,
-    price: num(v.price),
+    // Com tamanhos, o preço da peça é derivado no backend (menor tamanho).
+    price: v.variants.length > 0 ? null : num(v.price),
     stockQuantity: v.availability === "ReadyToBuy" ? num(v.stockQuantity) : null,
     leadTimeDays: v.availability === "MadeToOrder" ? num(v.leadTimeDays) : null,
     isFeatured: v.isFeatured,
     isPublished: v.isPublished,
+    variants: v.variants.map((x) => ({
+      id: x.id || null,
+      name: x.name,
+      price: Number(x.price),
+    })),
   };
 }
 
@@ -82,10 +105,17 @@ export function ProductForm({ product }: { product?: Product }) {
       leadTimeDays: product?.leadTimeDays != null ? String(product.leadTimeDays) : "",
       isFeatured: product?.isFeatured ?? false,
       isPublished: product?.isPublished ?? true,
+      variants:
+        product?.variants
+          ?.slice()
+          .sort((a, b) => a.displayOrder - b.displayOrder)
+          .map((v) => ({ id: v.id, name: v.name, price: String(v.price) })) ?? [],
     },
   });
 
   const availability = form.watch("availability");
+  const variantArray = useFieldArray({ control: form.control, name: "variants" });
+  const hasVariants = form.watch("variants").length > 0;
 
   const mutation = useMutation<Product, ApiError, FormValues>({
     mutationFn: (values) =>
@@ -169,19 +199,21 @@ export function ProductForm({ product }: { product?: Product }) {
         </div>
 
         <div className="grid gap-5 sm:grid-cols-3">
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{availability === "MadeToOrder" ? "Preço a partir de (R$)" : "Preço (R$)"}</FormLabel>
-                <FormControl>
-                  <Input type="number" step="0.01" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {!hasVariants && (
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{availability === "MadeToOrder" ? "Preço a partir de (R$)" : "Preço (R$)"}</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
           {availability === "ReadyToBuy" && (
             <FormField
               control={form.control}
@@ -212,6 +244,65 @@ export function ProductForm({ product }: { product?: Product }) {
               )}
             />
           )}
+        </div>
+
+        {/* ── Tamanhos e preços ── */}
+        <div className="space-y-4 rounded-xl border border-dashed border-border p-4">
+          <div>
+            <p className="text-sm font-medium">Tamanhos e preços</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              Para peças vendidas em mais de um tamanho (P/M/G, 20 cm...). Com tamanhos, o site
+              exibe &quot;a partir de&quot; com o menor preço e o cliente escolhe na página da peça.
+            </p>
+          </div>
+
+          {variantArray.fields.map((field, index) => (
+            <div key={field.id} className="flex items-start gap-2">
+              <FormField
+                control={form.control}
+                name={`variants.${index}.name`}
+                render={({ field: f }) => (
+                  <FormItem className="flex-1">
+                    <FormControl>
+                      <Input placeholder="Tamanho (ex.: P, M, G, 20 cm)" {...f} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name={`variants.${index}.price`}
+                render={({ field: f }) => (
+                  <FormItem className="w-36">
+                    <FormControl>
+                      <Input type="number" step="0.01" placeholder="Preço (R$)" {...f} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => variantArray.remove(index)}
+                aria-label="Remover tamanho"
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+          ))}
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => variantArray.append({ name: "", price: "" })}
+          >
+            <Plus className="size-4" /> Adicionar tamanho
+          </Button>
         </div>
 
         <FormField

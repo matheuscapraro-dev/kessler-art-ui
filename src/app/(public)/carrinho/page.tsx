@@ -6,7 +6,7 @@ import { ArrowLeft, Minus, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { PageHeader } from "@/components/layout/page-header";
-import { useCart } from "@/components/cart/cart-provider";
+import { cartLineKey, useCart } from "@/components/cart/cart-provider";
 import { YarnBall } from "@/components/decor";
 import { formatPrice } from "@/lib/format";
 
@@ -41,7 +41,7 @@ export default function CarrinhoPage() {
       <div className="mx-auto grid max-w-4xl gap-8 px-4 pb-16 md:grid-cols-[1fr_320px]">
         <ul className="space-y-4">
           {items.map((item) => (
-            <li key={item.productId} className="flex gap-4 rounded-2xl border border-border bg-card p-3">
+            <li key={cartLineKey(item)} className="flex gap-4 rounded-2xl border border-border bg-card p-3">
               <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-muted">
                 {item.coverImageUrl && (
                   <Image src={item.coverImageUrl} alt={item.name} fill sizes="80px" className="object-cover" />
@@ -53,12 +53,15 @@ export default function CarrinhoPage() {
                     <Link href={`/peca/${item.slug}`} className="font-medium hover:underline">
                       {item.name}
                     </Link>
+                    {item.variantName && (
+                      <p className="text-xs text-muted-foreground">Tamanho: {item.variantName}</p>
+                    )}
                     {item.quantity > 1 && (
                       <p className="text-xs text-muted-foreground">{formatPrice(item.price)} cada</p>
                     )}
                   </div>
                   <button
-                    onClick={() => remove(item.productId)}
+                    onClick={() => remove(cartLineKey(item))}
                     className="text-muted-foreground transition-colors hover:text-destructive"
                     aria-label={`Remover ${item.name}`}
                   >
@@ -70,7 +73,7 @@ export default function CarrinhoPage() {
                     <Button
                       variant="outline"
                       size="icon-sm"
-                      onClick={() => setQuantity(item.productId, item.quantity - 1)}
+                      onClick={() => setQuantity(cartLineKey(item), item.quantity - 1)}
                       disabled={item.quantity <= 1}
                       aria-label="Diminuir"
                     >
@@ -80,7 +83,7 @@ export default function CarrinhoPage() {
                     <Button
                       variant="outline"
                       size="icon-sm"
-                      onClick={() => setQuantity(item.productId, item.quantity + 1)}
+                      onClick={() => setQuantity(cartLineKey(item), item.quantity + 1)}
                       aria-label="Aumentar"
                     >
                       <Plus className="size-3.5" />

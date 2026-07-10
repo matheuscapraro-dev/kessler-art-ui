@@ -17,6 +17,14 @@ export interface ProductImage {
   isCover: boolean;
 }
 
+/** Tamanho de uma peça com preço próprio (P/M/G, 20 cm...). */
+export interface ProductVariant {
+  id: string;
+  name: string;
+  price: number;
+  displayOrder: number;
+}
+
 export interface ProductSummary {
   id: string;
   name: string;
@@ -26,6 +34,8 @@ export interface ProductSummary {
   categoryName: string;
   coverImageUrl?: string | null;
   isFeatured: boolean;
+  /** Com tamanhos, `price` é o menor deles — exibir como "a partir de". */
+  hasVariants: boolean;
 }
 
 export interface Product {
@@ -42,6 +52,7 @@ export interface Product {
   isFeatured: boolean;
   isPublished: boolean;
   images: ProductImage[];
+  variants: ProductVariant[];
 }
 
 export const availabilityLabel: Record<ProductAvailability, string> = {

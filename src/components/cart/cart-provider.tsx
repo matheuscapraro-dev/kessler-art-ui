@@ -8,14 +8,22 @@ export interface CartItem {
   name: string;
   price: number;
   coverImageUrl?: string | null;
+  /** Tamanho escolhido — null quando a peça não tem tamanhos. */
+  variantId: string | null;
+  variantName: string | null;
   quantity: number;
+}
+
+/** Uma linha do carrinho é identificada por peça + tamanho. */
+export function cartLineKey(item: Pick<CartItem, "productId" | "variantId">): string {
+  return `${item.productId}:${item.variantId ?? ""}`;
 }
 
 interface CartContextValue {
   items: CartItem[];
   add: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
-  remove: (productId: string) => void;
-  setQuantity: (productId: string, quantity: number) => void;
+  remove: (lineKey: string) => void;
+  setQuantity: (lineKey: string, quantity: number) => void;
   clear: () => void;
   total: number;
   count: number;
@@ -31,7 +39,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setItems(JSON.parse(raw));
+      if (raw) {
+        // Normaliza carrinhos salvos antes dos tamanhos existirem.
+        const parsed = (JSON.parse(raw) as CartItem[]).map((i) => ({
+          ...i,
+          variantId: i.variantId ?? null,
+          variantName: i.variantName ?? null,
+        }));
+        setItems(parsed);
+      }
     } catch {
       // ignora cache corrompido
     }
@@ -44,23 +60,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const add = useCallback((item: Omit<CartItem, "quantity">, quantity = 1) => {
     setItems((prev) => {
-      const existing = prev.find((i) => i.productId === item.productId);
+      const key = cartLineKey(item);
+      const existing = prev.find((i) => cartLineKey(i) === key);
       if (existing) {
         return prev.map((i) =>
-          i.productId === item.productId ? { ...i, quantity: i.quantity + quantity } : i
+          cartLineKey(i) === key ? { ...i, quantity: i.quantity + quantity } : i
         );
       }
       return [...prev, { ...item, quantity }];
     });
   }, []);
 
-  const remove = useCallback((productId: string) => {
-    setItems((prev) => prev.filter((i) => i.productId !== productId));
+  const remove = useCallback((lineKey: string) => {
+    setItems((prev) => prev.filter((i) => cartLineKey(i) !== lineKey));
   }, []);
 
-  const setQuantity = useCallback((productId: string, quantity: number) => {
+  const setQuantity = useCallback((lineKey: string, quantity: number) => {
     setItems((prev) =>
-      prev.map((i) => (i.productId === productId ? { ...i, quantity: Math.max(1, quantity) } : i))
+      prev.map((i) =>
+        cartLineKey(i) === lineKey ? { ...i, quantity: Math.max(1, quantity) } : i
+      )
     );
   }, []);
 

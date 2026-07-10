@@ -5,7 +5,7 @@ export interface CreateOrderPayload {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
-  items: { productId: string; quantity: number }[];
+  items: { productId: string; quantity: number; variantId?: string | null }[];
   notes?: string;
 }
 

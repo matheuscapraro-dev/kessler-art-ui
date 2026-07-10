@@ -44,6 +44,8 @@ type FormValues = z.infer<typeof schema>;
 export function CommissionForm() {
   const searchParams = useSearchParams();
   const ref = searchParams.get("ref") ?? undefined;
+  // Tamanho escolhido na página da peça (quando ela tem tamanhos) — já chega preenchido.
+  const tamanho = searchParams.get("tamanho") ?? "";
 
   const [references, setReferences] = useState<CommissionReferenceInput[]>([]);
 
@@ -53,7 +55,7 @@ export function CommissionForm() {
       description: ref ? `Tenho interesse em algo parecido com a peça "${ref}". ` : "",
       desiredCategory: "",
       colors: "",
-      size: "",
+      size: tamanho,
       desiredDeadline: "",
       customerName: "",
       customerEmail: "",
