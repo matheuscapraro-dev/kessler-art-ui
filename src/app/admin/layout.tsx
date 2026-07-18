@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 import { FileText, LayoutDashboard, LayoutGrid, LogOut, Package, ShoppingBag, Sparkles, Tags } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { getToken } from "@/lib/api-client";
-import { authService } from "@/services/auth";
+import { clearAccessTokenCache } from "@/lib/session-token";
 
 const nav = [
   { href: "/admin", label: "Início", icon: LayoutDashboard, exact: true },
@@ -23,22 +23,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const router = useRouter();
   const isLogin = pathname === "/admin/login";
-  const [ready, setReady] = useState(false);
+  // O middleware já barra no edge; este guard cobre navegação client-side e expiração.
+  const { data: session, status } = useSession();
+  const authorized = status === "authenticated" && session.user.role === "Admin";
 
   useEffect(() => {
-    if (isLogin) {
-      setReady(true);
-      return;
-    }
-    if (!getToken()) {
+    if (!isLogin && status !== "loading" && !authorized) {
       router.replace("/admin/login");
-      return;
     }
-    setReady(true);
-  }, [isLogin, router]);
+  }, [isLogin, status, authorized, router]);
 
   if (isLogin) return <>{children}</>;
-  if (!ready) return null;
+  if (!authorized) return null;
 
   return (
     <div className="flex min-h-dvh bg-secondary/20">
@@ -69,8 +65,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             variant="ghost"
             className="w-full justify-start text-muted-foreground"
             onClick={() => {
-              authService.logout();
-              router.replace("/admin/login");
+              clearAccessTokenCache();
+              void signOut({ callbackUrl: "/admin/login" });
             }}
           >
             <LogOut className="size-4" /> Sair

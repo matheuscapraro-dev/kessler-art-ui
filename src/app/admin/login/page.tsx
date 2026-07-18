@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { getSession, signIn, signOut } from "next-auth/react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import {
   Form,
   FormControl,
@@ -16,8 +18,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { authService } from "@/services/auth";
-import { ApiError } from "@/lib/api-client";
+import { clearAccessTokenCache } from "@/lib/session-token";
 
 const schema = z.object({
   email: z.string().email("E-mail inválido."),
@@ -41,9 +42,24 @@ export default function AdminLoginPage() {
     }
   }, []);
 
-  const mutation = useMutation<unknown, ApiError, FormValues>({
-    mutationFn: (values) => authService.login(values.email, values.password),
-    onSuccess: () => router.replace("/admin"),
+  const mutation = useMutation<void, Error, FormValues>({
+    mutationFn: async (values) => {
+      const result = await signIn("email-password", { ...values, redirect: false });
+      if (result?.error) {
+        throw new Error(result.error === "CredentialsSignin" ? "E-mail ou senha inválidos." : result.error);
+      }
+      clearAccessTokenCache();
+      // A tela é da artista: cliente comum logando aqui volta para o site.
+      const session = await getSession();
+      if (session?.user.role !== "Admin") {
+        await signOut({ redirect: false });
+        throw new Error("Esta área é restrita à artista.");
+      }
+    },
+    onSuccess: () => {
+      router.replace("/admin");
+      router.refresh();
+    },
   });
 
   return (
@@ -82,7 +98,7 @@ export default function AdminLoginPage() {
                 <FormItem>
                   <FormLabel>Senha</FormLabel>
                   <FormControl>
-                    <Input type="password" autoComplete="current-password" {...field} />
+                    <PasswordInput autoComplete="current-password" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -91,7 +107,7 @@ export default function AdminLoginPage() {
 
             {mutation.isError && (
               <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {mutation.error.detail ?? "Não foi possível entrar."}
+                {mutation.error.message || "Não foi possível entrar."}
               </p>
             )}
 

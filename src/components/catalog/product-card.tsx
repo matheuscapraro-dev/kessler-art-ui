@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { YarnBall } from "@/components/decor";
+import { FavoriteButton } from "@/components/catalog/favorite-button";
 import { formatFromPrice, formatPrice } from "@/lib/format";
 import { availabilityLabel, type ProductSummary } from "@/types/catalog";
 
@@ -35,6 +36,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
         <Badge variant="secondary" className="absolute left-2.5 top-2.5 rounded-full shadow-soft">
           {availabilityLabel[product.availability]}
         </Badge>
+        <FavoriteButton productId={product.id} className="absolute right-2.5 top-2.5" />
       </div>
 
       <div className="space-y-0.5 px-1.5 pb-1 pt-3">

@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { z } from "zod";
 import { CheckCircle2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -63,6 +64,17 @@ export function CommissionForm() {
     },
   });
 
+  // Cliente logado: pré-preenche o contato com os dados da conta (tudo editável).
+  const { data: session } = useSession();
+  useEffect(() => {
+    if (session?.user && !form.formState.isDirty) {
+      form.setValue("customerName", session.user.name ?? "");
+      form.setValue("customerEmail", session.user.email ?? "");
+      form.setValue("customerPhone", session.user.phone ?? "");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.email]);
+
   const mutation = useMutation<Commission, ApiError, FormValues>({
     mutationFn: (values) =>
       commissionService.create({
@@ -74,11 +86,23 @@ export function CommissionForm() {
   });
 
   if (mutation.isSuccess) {
-    return <CommissionSuccess commission={mutation.data} />;
+    return <CommissionSuccess commission={mutation.data} isGuest={!session?.user} />;
   }
 
   return (
     <Form {...form}>
+      {!session?.user && (
+        <p className="mb-5 rounded-xl border border-border bg-card px-4 py-3 text-center text-sm text-muted-foreground">
+          Já tem conta?{" "}
+          <a
+            href={`/entrar?callbackUrl=${encodeURIComponent("/encomendar")}`}
+            className="font-medium text-primary hover:underline"
+          >
+            Entre
+          </a>{" "}
+          para preencher seu contato e acompanhar a encomenda sem precisar do código.
+        </p>
+      )}
       <form
         onSubmit={form.handleSubmit((values) => mutation.mutate(values))}
         className="space-y-8"
@@ -231,33 +255,52 @@ export function CommissionForm() {
   );
 }
 
-function CommissionSuccess({ commission }: { commission: Commission }) {
+function CommissionSuccess({ commission, isGuest }: { commission: Commission; isGuest: boolean }) {
   const message =
     `Olá! Acabei de enviar a encomenda ${commission.code} pelo site. ` +
     `Resumo: ${commission.description}`;
 
   return (
-    <div className="relative rounded-2xl border border-border bg-card p-8 text-center">
-      <Celebrate />
-      <CheckCircle2 className="mx-auto size-12 text-primary" />
-      <h2 className="mt-4 font-heading text-2xl">Encomenda recebida! 🧶</h2>
-      <p className="mt-4 inline-block rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 px-5 py-2.5 font-heading text-2xl tracking-wide text-primary">
-        {commission.code}
-      </p>
-      <p className="mx-auto mt-3 max-w-md text-muted-foreground">
-        Guardei tudo certinho — esse é o seu código de acompanhamento. Vamos combinar os
-        detalhes e o orçamento pelo WhatsApp.
-      </p>
-      <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-        <Button asChild size="lg">
-          <a href={whatsappLink(message)} target="_blank" rel="noopener noreferrer">
-            <MessageCircle className="size-4" /> Continuar no WhatsApp
-          </a>
-        </Button>
-        <Button asChild size="lg" variant="outline">
-          <a href={`/encomenda/${commission.code}`}>Acompanhar encomenda</a>
-        </Button>
+    <div className="space-y-4">
+      <div className="relative rounded-2xl border border-border bg-card p-8 text-center">
+        <Celebrate />
+        <CheckCircle2 className="mx-auto size-12 text-primary" />
+        <h2 className="mt-4 font-heading text-2xl">Encomenda recebida! 🧶</h2>
+        <p className="mt-4 inline-block rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 px-5 py-2.5 font-heading text-2xl tracking-wide text-primary">
+          {commission.code}
+        </p>
+        <p className="mx-auto mt-3 max-w-md text-muted-foreground">
+          Guardei tudo certinho — esse é o seu código de acompanhamento. Vamos combinar os
+          detalhes e o orçamento pelo WhatsApp.
+        </p>
+        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+          <Button asChild size="lg">
+            <a href={whatsappLink(message)} target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="size-4" /> Continuar no WhatsApp
+            </a>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <a href={`/encomenda/${commission.code}`}>Acompanhar encomenda</a>
+          </Button>
+        </div>
       </div>
+
+      {/* Convite pós-envio: guest vira conta e a encomenda entra no histórico ao verificar o e-mail. */}
+      {isGuest && commission.customerEmail && (
+        <div className="rounded-2xl border border-primary/25 bg-primary/5 p-5 text-center">
+          <p className="text-sm text-foreground">
+            Quer acompanhar tudo num só lugar? Crie sua conta com o mesmo e-mail e esta encomenda
+            aparece no seu histórico. 🧶
+          </p>
+          <Button asChild variant="outline" size="sm" className="mt-3">
+            <a
+              href={`/cadastrar?email=${encodeURIComponent(commission.customerEmail)}&callbackUrl=${encodeURIComponent("/conta/encomendas")}`}
+            >
+              Criar minha conta
+            </a>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

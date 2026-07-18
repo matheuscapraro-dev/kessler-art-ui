@@ -1,12 +1,19 @@
-export interface AuthResult {
-  token: string;
-  expiresAtUtc: string;
+/** Usuário autenticado, como o backend expõe em /api/auth/me (AuthUserDto). */
+export interface AuthUser {
+  id: string;
   name: string;
   email: string;
-  role: string;
+  phone: string | null;
+  profilePictureUrl: string | null;
+  role: "Customer" | "Admin";
+  emailVerified: boolean;
+  hasPassword: boolean;
 }
 
-export interface AdminUser {
-  name: string;
-  email: string;
+/** Resposta de login/registro/refresh do backend (AuthResultDto). */
+export interface AuthResult {
+  accessToken: string;
+  expiresAtUtc: string;
+  refreshToken: string;
+  user: AuthUser;
 }

@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-provider";
 import { YarnBall } from "@/components/decor";
+import { UserMenu } from "@/components/layout/user-menu";
 import {
   Sheet,
   SheetClose,
@@ -81,6 +82,8 @@ export function SiteHeader() {
               )}
             </Link>
           </Button>
+
+          <UserMenu />
 
           <Button asChild className="hidden md:inline-flex">
             <Link href="/encomendar">Fazer encomenda</Link>

@@ -1,6 +1,6 @@
+import { signOut } from "next-auth/react";
 import { config } from "./config";
-
-const TOKEN_KEY = "kessler_admin_token";
+import { clearAccessTokenCache, getAccessToken } from "./session-token";
 
 /** Erro estruturado da API, populado a partir do ProblemDetails do backend. */
 export class ApiError extends Error {
@@ -17,19 +17,16 @@ export class ApiError extends Error {
   }
 }
 
-// ── Token do admin (só no browser) ───────────────────────────────────
-export function getToken(): string | null {
-  return typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
-}
-export function setToken(token: string): void {
-  if (typeof window !== "undefined") localStorage.setItem(TOKEN_KEY, token);
-}
-export function clearToken(): void {
-  if (typeof window !== "undefined") localStorage.removeItem(TOKEN_KEY);
+/** Sessão morta numa rota autenticada: encerra a sessão NextAuth e volta ao login. */
+async function handleUnauthorized(): Promise<void> {
+  clearAccessTokenCache();
+  if (typeof window === "undefined") return;
+  const isAdmin = window.location.pathname.startsWith("/admin");
+  await signOut({ callbackUrl: isAdmin ? "/admin/login?expirado=1" : "/entrar?expirado=1" });
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = getToken();
+  const token = await getAccessToken();
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -39,14 +36,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${config.apiUrl}${path}`, { ...options, headers });
 
   if (!res.ok) {
-    // Token expirado/inválido numa rota autenticada: limpa a sessão e manda pro login,
-    // em vez de deixar o admin "logado" recebendo 401 em toda chamada.
-    if (res.status === 401 && token && typeof window !== "undefined") {
-      clearToken();
-      if (!window.location.pathname.startsWith("/admin/login")) {
-        window.location.assign("/admin/login?expirado=1");
-      }
-    }
+    if (res.status === 401 && token) await handleUnauthorized();
+    // 429 vem sem corpo do rate limiter — statusText em inglês não serve ao usuário.
+    if (res.status === 429)
+      throw new ApiError({ detail: "Muitas tentativas. Aguarde um minuto e tente de novo.", status: 429 });
     const body = await res.json().catch(() => ({ detail: res.statusText, status: res.status }));
     throw new ApiError({ ...body, status: body.status ?? res.status });
   }
@@ -65,13 +58,14 @@ export const api = {
 
   /** Upload multipart — não define Content-Type (o browser cuida do boundary). */
   async upload<T>(path: string, formData: FormData): Promise<T> {
-    const token = getToken();
+    const token = await getAccessToken();
     const res = await fetch(`${config.apiUrl}${path}`, {
       method: "POST",
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       body: formData,
     });
     if (!res.ok) {
+      if (res.status === 401 && token) await handleUnauthorized();
       const body = await res.json().catch(() => ({ detail: res.statusText, status: res.status }));
       throw new ApiError({ ...body, status: body.status ?? res.status });
     }

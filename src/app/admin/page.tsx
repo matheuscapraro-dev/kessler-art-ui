@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { orderService } from "@/services/orders";
 import { commissionService } from "@/services/commissions";
-import { authService } from "@/services/auth";
 
 function StatCard({ label, value, href }: { label: string; value: number | string; href: string }) {
   return (
@@ -21,12 +21,12 @@ export default function AdminDashboard() {
 
   const pendingOrders = orders.data?.filter((o) => o.status === "Pendente").length ?? 0;
   const newCommissions = commissions.data?.filter((c) => c.status === "Nova").length ?? 0;
-  const user = authService.getUser();
+  const { data: session } = useSession();
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-heading text-3xl font-semibold">Olá, {user?.name ?? "Kessler"} 👋</h1>
+        <h1 className="font-heading text-3xl font-semibold">Olá, {session?.user?.name ?? "Kessler"} 👋</h1>
         <p className="text-muted-foreground">Um resumo do que está acontecendo no seu ateliê.</p>
       </div>
 

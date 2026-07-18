@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 import { z } from "zod";
 import { CheckCircle2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,20 @@ export default function CheckoutPage() {
     resolver: zodResolver(schema),
     defaultValues: { customerName: "", customerEmail: "", customerPhone: "", notes: "" },
   });
+
+  // Cliente logado: pré-preenche com os dados da conta (tudo continua editável).
+  const { data: session } = useSession();
+  useEffect(() => {
+    if (session?.user && !form.formState.isDirty) {
+      form.reset({
+        customerName: session.user.name ?? "",
+        customerEmail: session.user.email ?? "",
+        customerPhone: session.user.phone ?? "",
+        notes: form.getValues("notes"),
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.email]);
 
   const mutation = useMutation<Order, ApiError, FormValues>({
     mutationFn: (values) =>
@@ -90,6 +105,23 @@ export default function CheckoutPage() {
               </Button>
             </div>
           </div>
+
+          {/* Convite pós-compra: guest vira conta e o pedido entra no histórico ao verificar o e-mail. */}
+          {!session?.user && (
+            <div className="mt-4 rounded-2xl border border-primary/25 bg-primary/5 p-5 text-center">
+              <p className="text-sm text-foreground">
+                Quer acompanhar tudo num só lugar? Crie sua conta com o mesmo e-mail e este pedido
+                aparece no seu histórico. 🧶
+              </p>
+              <Button asChild variant="outline" size="sm" className="mt-3">
+                <Link
+                  href={`/cadastrar?email=${encodeURIComponent(confirmedOrder.customerEmail)}&callbackUrl=${encodeURIComponent("/conta/pedidos")}`}
+                >
+                  Criar minha conta
+                </Link>
+              </Button>
+            </div>
+          )}
         </div>
       </>
     );
@@ -112,6 +144,20 @@ export default function CheckoutPage() {
   return (
     <>
       <PageHeader title="Finalizar pedido" subtitle="Seus dados para combinar entrega e pagamento." />
+      {!session?.user && (
+        <div className="mx-auto max-w-4xl px-4 pb-5">
+          <p className="rounded-xl border border-border bg-card px-4 py-3 text-center text-sm text-muted-foreground">
+            Já tem conta?{" "}
+            <Link
+              href={`/entrar?callbackUrl=${encodeURIComponent("/checkout")}`}
+              className="font-medium text-primary hover:underline"
+            >
+              Entre
+            </Link>{" "}
+            para preencher seus dados e acompanhar o pedido sem precisar do código.
+          </p>
+        </div>
+      )}
       <div className="mx-auto grid max-w-4xl gap-8 px-4 pb-16 md:grid-cols-[1fr_300px]">
         <Form {...form}>
           <form

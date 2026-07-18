@@ -1,26 +1,33 @@
-import { api, clearToken, setToken } from "@/lib/api-client";
-import type { AdminUser, AuthResult } from "@/types/auth";
+import { api } from "@/lib/api-client";
+import type { AuthResult } from "@/types/auth";
 
-const USER_KEY = "kessler_admin_user";
-
+/**
+ * Fluxos de conta que falam direto com a API (a sessão em si vive no NextAuth —
+ * login/logout são signIn()/signOut() de next-auth/react).
+ */
 export const authService = {
-  async login(email: string, password: string): Promise<AuthResult> {
-    const res = await api.post<AuthResult>("/api/auth/login", { email, password });
-    setToken(res.token);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(USER_KEY, JSON.stringify({ name: res.name, email: res.email }));
-    }
-    return res;
+  /** Cadastro por e-mail+senha. Depois do 200, o chamador faz signIn() para abrir a sessão. */
+  register(data: { name: string; email: string; password: string; phone?: string }) {
+    return api.post<AuthResult>("/api/auth/email/register", data);
   },
 
-  logout() {
-    clearToken();
-    if (typeof window !== "undefined") localStorage.removeItem(USER_KEY);
+  /** Confirma o e-mail pelo token do link. */
+  verifyEmail(token: string) {
+    return api.post<void>("/api/auth/verify-email", { token });
   },
 
-  getUser(): AdminUser | null {
-    if (typeof window === "undefined") return null;
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as AdminUser) : null;
+  /** Reenvia o link de verificação (resposta sempre genérica). */
+  resendVerification(email: string) {
+    return api.post<void>("/api/auth/resend-verification", { email });
+  },
+
+  /** Pede o link de redefinição de senha (resposta sempre genérica). */
+  forgotPassword(email: string) {
+    return api.post<void>("/api/auth/forgot-password", { email });
+  },
+
+  /** Define a nova senha a partir do link de reset. */
+  resetPassword(token: string, newPassword: string) {
+    return api.post<void>("/api/auth/reset-password", { token, newPassword });
   },
 };

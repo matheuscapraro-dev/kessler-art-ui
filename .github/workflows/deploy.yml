@@ -71,6 +71,10 @@ jobs:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
           NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
           NEXT_PUBLIC_WHATSAPP: ${{ secrets.NEXT_PUBLIC_WHATSAPP }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
         run: |
           scp frontend-release.tar.gz vps:/tmp/frontend-release.tar.gz
           scp deploy/nginx-kessler.conf vps:/tmp/nginx-kessler.conf
@@ -91,6 +95,12 @@ jobs:
                   NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
                   NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
                   NEXT_PUBLIC_WHATSAPP: process.env.NEXT_PUBLIC_WHATSAPP,
+                  NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+                  NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+                  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+                  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+                  // Chamadas servidor→servidor (NextAuth→API) via loopback, sem passar pelo nginx
+                  INTERNAL_API_URL: 'http://127.0.0.1:5002',
                 }
               }]
             };

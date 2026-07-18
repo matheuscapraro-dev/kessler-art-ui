@@ -5,6 +5,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import { FavoriteButton } from "@/components/catalog/favorite-button";
 import { whatsappLink } from "@/lib/config";
 import { formatFromPrice, formatPrice } from "@/lib/format";
 import type { Product } from "@/types/catalog";
@@ -36,14 +37,17 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
 
   return (
     <div className="space-y-5">
-      <p className="text-2xl font-medium text-primary">
-        {priceLabel}
-        {!isReady && selected && (
-          <span className="ml-2 text-sm font-normal text-muted-foreground">
-            (valor estimado — confirmamos no orçamento)
-          </span>
-        )}
-      </p>
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-2xl font-medium text-primary">
+          {priceLabel}
+          {!isReady && selected && (
+            <span className="ml-2 text-sm font-normal text-muted-foreground">
+              (valor estimado — confirmamos no orçamento)
+            </span>
+          )}
+        </p>
+        <FavoriteButton productId={product.id} className="size-10 shrink-0 border border-border/60 [&_svg]:size-5" />
+      </div>
 
       {variants.length > 0 && (
         <fieldset>
