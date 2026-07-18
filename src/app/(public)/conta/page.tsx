@@ -132,7 +132,7 @@ export default function ProfilePage() {
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>WhatsApp</FormLabel>
+                    <FormLabel>Telefone</FormLabel>
                     <FormControl>
                       <Input placeholder="(47) 99999-9999" autoComplete="tel" {...field} />
                     </FormControl>

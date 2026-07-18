@@ -347,7 +347,7 @@ export function WorkSheet({
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="w-cp">WhatsApp {isEncomenda && "*"}</Label>
+                  <Label htmlFor="w-cp">Telefone {isEncomenda && "*"}</Label>
                   <Input id="w-cp" value={form.customerPhone} onChange={(e) => set("customerPhone", e.target.value)} placeholder="(47) 99999-9999" />
                 </div>
                 <div className="space-y-1.5">

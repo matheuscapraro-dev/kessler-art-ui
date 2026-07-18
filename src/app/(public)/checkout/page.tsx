@@ -31,7 +31,7 @@ import type { Order } from "@/types/orders";
 const schema = z.object({
   customerName: z.string().min(1, "Informe seu nome."),
   customerEmail: z.string().email("E-mail inválido."),
-  customerPhone: z.string().min(8, "Informe um WhatsApp."),
+  customerPhone: z.string().min(8, "Informe um telefone."),
   notes: z.string().optional(),
 });
 
@@ -196,7 +196,7 @@ export default function CheckoutPage() {
                 name="customerPhone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>WhatsApp *</FormLabel>
+                    <FormLabel>Telefone *</FormLabel>
                     <FormControl>
                       <Input placeholder="(47) 99999-9999" {...field} />
                     </FormControl>
