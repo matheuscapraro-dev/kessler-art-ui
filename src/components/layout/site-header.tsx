@@ -2,11 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "motion/react";
-import { Menu, ShoppingBag } from "lucide-react";
+import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/components/cart/cart-provider";
 import { YarnBall } from "@/components/decor";
 import { UserMenu } from "@/components/layout/user-menu";
 import {
@@ -27,7 +25,6 @@ const navLinks = [
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const { count } = useCart();
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
@@ -66,23 +63,6 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="icon" className="relative" aria-label="Carrinho">
-            <Link href="/carrinho">
-              <ShoppingBag />
-              {count > 0 && (
-                <motion.span
-                  key={count}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                  className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-[0.6rem] font-semibold text-primary-foreground"
-                >
-                  {count}
-                </motion.span>
-              )}
-            </Link>
-          </Button>
-
           <UserMenu />
 
           <Button asChild className="hidden md:inline-flex">

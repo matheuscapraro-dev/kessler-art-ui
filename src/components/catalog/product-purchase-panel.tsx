@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import { ProductPurchaseDialog } from "@/components/orders/product-purchase-dialog";
 import { CommissionPieceDialog } from "@/components/orders/commission-piece-dialog";
 import { FavoriteButton } from "@/components/catalog/favorite-button";
 import { whatsappLink } from "@/lib/config";
@@ -79,16 +79,10 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
       <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:flex-wrap">
         {isReady ? (
           <>
-            <AddToCartButton
-              product={{
-                productId: product.id,
-                slug: product.slug,
-                name: product.name,
-                price: price ?? 0,
-                coverImageUrl: product.images[0]?.url ?? null,
-                variantId: selected?.id ?? null,
-                variantName: selected?.name ?? null,
-              }}
+            <ProductPurchaseDialog
+              product={product}
+              defaultVariant={selected}
+              trigger={<Button size="lg">Comprar</Button>}
             />
             {/* Qualquer peça é encomendável — pronta também vira "essa, mas na minha cor". */}
             <CommissionPieceDialog

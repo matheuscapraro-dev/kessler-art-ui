@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SessionProvider, signOut, useSession } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
-import { CartProvider } from "@/components/cart/cart-provider";
 import { ContentProvider } from "@/components/content-provider";
 import { clearAccessTokenCache } from "@/lib/session-token";
 
@@ -41,9 +40,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           disableTransitionOnChange
         >
           <SessionErrorWatcher />
-          <ContentProvider>
-            <CartProvider>{children}</CartProvider>
-          </ContentProvider>
+          <ContentProvider>{children}</ContentProvider>
           <Toaster richColors position="top-center" />
         </ThemeProvider>
       </QueryClientProvider>

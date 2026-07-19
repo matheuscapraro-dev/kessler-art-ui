@@ -2,20 +2,20 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Check, ExternalLink, MessageCircle, Plus, Trash2, X } from "lucide-react";
+import { Check, ExternalLink, Maximize2, MessageCircle, Minimize2, Plus, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -130,10 +130,12 @@ export function WorkSheet({
   const [showContact, setShowContact] = useState(false);
   const [tasks, setTasks] = useState<CommissionTaskInput[]>([]);
   const [newTask, setNewTask] = useState("");
+  const [expanded, setExpanded] = useState(false);
 
   // (Re)inicializa o formulário quando o painel abre.
   useEffect(() => {
     if (!open) return;
+    setExpanded(false);
     if (mode === "edit" && detail) {
       setForm(fromDetail(detail));
       setTasks(detail.tasks.map((t) => ({ title: t.title, isDone: t.isDone })));
@@ -218,20 +220,48 @@ export function WorkSheet({
   const doneCount = useMemo(() => tasks.filter((t) => t.isDone).length, [tasks]);
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full gap-0 overflow-y-auto sm:max-w-lg">
-        <SheetHeader className="sticky top-0 z-10 border-b bg-popover">
-          <SheetTitle>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        showCloseButton={false}
+        className={cn(
+          "flex max-h-[88vh] w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg",
+          expanded && "sm:max-w-3xl"
+        )}
+      >
+        <div className="absolute right-2 top-2 z-10 flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setExpanded((e) => !e)}
+            aria-label={expanded ? "Reduzir" : "Expandir"}
+            title={expanded ? "Reduzir" : "Expandir"}
+          >
+            {expanded ? <Minimize2 /> : <Maximize2 />}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => onOpenChange(false)}
+            aria-label="Fechar"
+          >
+            <X />
+          </Button>
+        </div>
+
+        <DialogHeader className="shrink-0 border-b border-border p-4 pr-20">
+          <DialogTitle>
             {mode === "create" ? "Novo trabalho" : detail?.title?.trim() || detail?.code || "Trabalho"}
-          </SheetTitle>
-          <SheetDescription>
+          </DialogTitle>
+          <DialogDescription>
             {mode === "create"
               ? "Encomenda de cliente ou um projeto seu — escolha o tipo."
               : `${workTypeLabel[form.type]}${detail ? ` · ${detail.code}` : ""}`}
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
-        <div className="space-y-5 p-4">
+        <div className="flex-1 space-y-5 overflow-y-auto p-4">
           {/* tipo — grade de chips */}
           <div className="space-y-2">
             <Label>Tipo de trabalho</Label>
@@ -484,7 +514,7 @@ export function WorkSheet({
           )}
         </div>
 
-        <SheetFooter className="sticky bottom-0 z-10 border-t bg-popover">
+        <DialogFooter className="mx-0 mb-0 shrink-0 rounded-b-xl border-t border-border bg-muted/50 p-4">
           <div className="flex items-center gap-2">
             {mode === "edit" && (
               <Button variant="destructive" size="sm" onClick={onDelete}>
@@ -495,8 +525,8 @@ export function WorkSheet({
               {saving ? "Salvando..." : mode === "create" ? "Criar" : "Salvar"}
             </Button>
           </div>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
