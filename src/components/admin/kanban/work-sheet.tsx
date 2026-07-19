@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Check, MessageCircle, Plus, Trash2, X } from "lucide-react";
+import { Check, ExternalLink, MessageCircle, Plus, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -280,6 +280,19 @@ export function WorkSheet({
               placeholder="O que será feito (mín. 10 caracteres)"
             />
           </div>
+
+          {/* peça de referência — encomenda que partiu de uma peça do site */}
+          {detail?.referenceProductSlug && (
+            <a
+              href={`/peca/${detail.referenceProductSlug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-xl border border-primary/25 bg-primary/5 px-3 py-2 text-sm text-primary transition-colors hover:bg-primary/10"
+            >
+              <ExternalLink className="size-4 shrink-0" />
+              <span className="truncate">Ver peça de referência no site</span>
+            </a>
+          )}
 
           {/* prioridade — controle segmentado */}
           <div className="space-y-1.5">

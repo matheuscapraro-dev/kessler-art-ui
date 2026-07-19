@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MessageCircle, XCircle } from "lucide-react";
+import Image from "next/image";
+import { ChevronRight, MessageCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatusTimeline, type TimelineStep } from "@/components/orders/status-timeline";
 import { TrackLookupForm } from "@/components/orders/track-lookup-form";
 import { commissionService } from "@/services/commissions";
+import { catalogService } from "@/services/catalog";
 import { whatsappLink } from "@/lib/config";
 import { formatPrice } from "@/lib/format";
+import { safe } from "@/lib/fetch-safe";
+import { type Product } from "@/types/catalog";
 import { type Commission, type CommissionStatus } from "@/types/orders";
 
 export const metadata: Metadata = { title: "Acompanhar encomenda" };
@@ -91,6 +95,17 @@ export default async function EncomendaPage({ params }: { params: Promise<{ codi
   const currentIndex = Math.max(flow.findIndex((f) => f.status === commission.status), 0);
   const waMessage = `Olá! Sobre a minha encomenda ${commission.code} — podemos conversar?`;
 
+  // Encomenda que partiu de uma peça do site: mostra a peça de referência (best-effort).
+  const referenceProduct: Product | null = commission.referenceProductSlug
+    ? await safe<Product | null>(
+        () =>
+          catalogService.getProductBySlug(commission.referenceProductSlug!, {
+            next: { revalidate: 60 },
+          }),
+        null,
+      )
+    : null;
+
   return (
     <>
       <PageHeader
@@ -142,6 +157,31 @@ export default async function EncomendaPage({ params }: { params: Promise<{ codi
               </Button>
             )}
           </div>
+        )}
+
+        {/* Peça da galeria que originou a encomenda */}
+        {referenceProduct && (
+          <Link
+            href={`/peca/${referenceProduct.slug}`}
+            className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 transition-colors hover:border-primary/40"
+          >
+            {referenceProduct.images[0]?.url && (
+              <Image
+                src={referenceProduct.images[0].url}
+                alt={referenceProduct.name}
+                width={64}
+                height={64}
+                className="warm-img size-16 shrink-0 rounded-xl object-cover"
+              />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                Peça de referência
+              </p>
+              <p className="truncate font-heading text-base">{referenceProduct.name}</p>
+            </div>
+            <ChevronRight className="size-5 shrink-0 text-muted-foreground" />
+          </Link>
         )}
 
         <div className="space-y-3 rounded-2xl border border-border bg-card p-6">

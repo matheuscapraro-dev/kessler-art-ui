@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AddToCartButton } from "@/components/cart/add-to-cart-button";
+import { CommissionPieceDialog } from "@/components/orders/commission-piece-dialog";
 import { FavoriteButton } from "@/components/catalog/favorite-button";
 import { whatsappLink } from "@/lib/config";
 import { formatFromPrice, formatPrice } from "@/lib/format";
@@ -30,10 +30,6 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
   const waMessage = selected
     ? `Olá! Tenho interesse na peça "${product.name}" (tamanho ${selected.name}). Pode me contar mais?`
     : `Olá! Tenho interesse na peça "${product.name}". Pode me contar mais?`;
-
-  const encomendarHref = selected
-    ? `/encomendar?ref=${product.slug}&tamanho=${encodeURIComponent(selected.name)}`
-    : `/encomendar?ref=${product.slug}`;
 
   return (
     <div className="space-y-5">
@@ -80,23 +76,37 @@ export function ProductPurchasePanel({ product }: { product: Product }) {
         </fieldset>
       )}
 
-      <div className="flex flex-col gap-3 pt-1 sm:flex-row">
+      <div className="flex flex-col gap-3 pt-1 sm:flex-row sm:flex-wrap">
         {isReady ? (
-          <AddToCartButton
-            product={{
-              productId: product.id,
-              slug: product.slug,
-              name: product.name,
-              price: price ?? 0,
-              coverImageUrl: product.images[0]?.url ?? null,
-              variantId: selected?.id ?? null,
-              variantName: selected?.name ?? null,
-            }}
-          />
+          <>
+            <AddToCartButton
+              product={{
+                productId: product.id,
+                slug: product.slug,
+                name: product.name,
+                price: price ?? 0,
+                coverImageUrl: product.images[0]?.url ?? null,
+                variantId: selected?.id ?? null,
+                variantName: selected?.name ?? null,
+              }}
+            />
+            {/* Qualquer peça é encomendável — pronta também vira "essa, mas na minha cor". */}
+            <CommissionPieceDialog
+              product={product}
+              defaultVariant={selected}
+              trigger={
+                <Button size="lg" variant="outline">
+                  Encomendar sob medida
+                </Button>
+              }
+            />
+          </>
         ) : (
-          <Button asChild size="lg">
-            <Link href={encomendarHref}>Encomendar esta peça</Link>
-          </Button>
+          <CommissionPieceDialog
+            product={product}
+            defaultVariant={selected}
+            trigger={<Button size="lg">Encomendar esta peça</Button>}
+          />
         )}
         <Button asChild size="lg" variant="outline">
           <a href={whatsappLink(waMessage)} target="_blank" rel="noopener noreferrer">

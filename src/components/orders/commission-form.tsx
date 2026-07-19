@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { z } from "zod";
-import { CheckCircle2, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,10 +21,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { ReferenceImageUploader } from "@/components/orders/reference-image-uploader";
+import { CommissionSuccess } from "@/components/orders/commission-success";
 import { commissionService, type CommissionReferenceInput } from "@/services/commissions";
-import { Celebrate } from "@/components/motion/celebrate";
 import { ApiError } from "@/lib/api-client";
-import { whatsappLink } from "@/lib/config";
 import type { Commission } from "@/types/orders";
 
 const schema = z.object({
@@ -43,20 +40,15 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export function CommissionForm() {
-  const searchParams = useSearchParams();
-  const ref = searchParams.get("ref") ?? undefined;
-  // Tamanho escolhido na página da peça (quando ela tem tamanhos) — já chega preenchido.
-  const tamanho = searchParams.get("tamanho") ?? "";
-
   const [references, setReferences] = useState<CommissionReferenceInput[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      description: ref ? `Tenho interesse em algo parecido com a peça "${ref}". ` : "",
+      description: "",
       desiredCategory: "",
       colors: "",
-      size: tamanho,
+      size: "",
       desiredDeadline: "",
       customerName: "",
       customerEmail: "",
@@ -80,7 +72,6 @@ export function CommissionForm() {
       commissionService.create({
         ...values,
         desiredDeadline: values.desiredDeadline || null,
-        referenceProductSlug: ref,
         referenceImages: references,
       }),
   });
@@ -252,55 +243,5 @@ export function CommissionForm() {
         </Button>
       </form>
     </Form>
-  );
-}
-
-function CommissionSuccess({ commission, isGuest }: { commission: Commission; isGuest: boolean }) {
-  const message =
-    `Olá! Acabei de enviar a encomenda ${commission.code} pelo site. ` +
-    `Resumo: ${commission.description}`;
-
-  return (
-    <div className="space-y-4">
-      <div className="relative rounded-2xl border border-border bg-card p-8 text-center">
-        <Celebrate />
-        <CheckCircle2 className="mx-auto size-12 text-primary" />
-        <h2 className="mt-4 font-heading text-2xl">Encomenda recebida! 🧶</h2>
-        <p className="mt-4 inline-block rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 px-5 py-2.5 font-heading text-2xl tracking-wide text-primary">
-          {commission.code}
-        </p>
-        <p className="mx-auto mt-3 max-w-md text-muted-foreground">
-          Guardei tudo certinho — esse é o seu código de acompanhamento. Vamos combinar os
-          detalhes e o orçamento pelo WhatsApp.
-        </p>
-        <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-          <Button asChild size="lg">
-            <a href={whatsappLink(message)} target="_blank" rel="noopener noreferrer">
-              <MessageCircle className="size-4" /> Continuar no WhatsApp
-            </a>
-          </Button>
-          <Button asChild size="lg" variant="outline">
-            <a href={`/encomenda/${commission.code}`}>Acompanhar encomenda</a>
-          </Button>
-        </div>
-      </div>
-
-      {/* Convite pós-envio: guest vira conta e a encomenda entra no histórico ao verificar o e-mail. */}
-      {isGuest && commission.customerEmail && (
-        <div className="rounded-2xl border border-primary/25 bg-primary/5 p-5 text-center">
-          <p className="text-sm text-foreground">
-            Quer acompanhar tudo num só lugar? Crie sua conta com o mesmo e-mail e esta encomenda
-            aparece no seu histórico. 🧶
-          </p>
-          <Button asChild variant="outline" size="sm" className="mt-3">
-            <a
-              href={`/cadastrar?email=${encodeURIComponent(commission.customerEmail)}&callbackUrl=${encodeURIComponent("/conta/encomendas")}`}
-            >
-              Criar minha conta
-            </a>
-          </Button>
-        </div>
-      )}
-    </div>
   );
 }
