@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PackageSearch } from "lucide-react";
+import { Container } from "@/components/layout/container";
 import { PageHeader } from "@/components/layout/page-header";
 import { ContactWhatsAppForm } from "@/components/contact-whatsapp-form";
 import { TrackLookupForm } from "@/components/orders/track-lookup-form";
@@ -16,7 +17,7 @@ export default function ContatoPage() {
         title="Vamos conversar"
         subtitle="Tire dúvidas, peça um orçamento ou só dê um oi. Respondo com carinho."
       />
-      <div className="mx-auto grid max-w-3xl gap-6 px-4 pb-12">
+      <Container size="narrow" className="grid gap-6 pb-12">
         <ContactWhatsAppForm />
 
         {/* Rastreio por código — âncora usada pelo link "Acompanhar pedido" do rodapé */}
@@ -33,7 +34,7 @@ export default function ContatoPage() {
           </p>
           <TrackLookupForm />
         </section>
-      </div>
+      </Container>
     </>
   );
 }

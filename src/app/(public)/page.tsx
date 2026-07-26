@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Heart, Package, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Container } from "@/components/layout/container";
 import { ProductCard } from "@/components/catalog/product-card";
 import { YarnBall } from "@/components/decor";
 import { Reveal } from "@/components/motion/reveal";
@@ -33,12 +34,12 @@ export default async function HomePage() {
           <div className="absolute -right-16 top-32 size-72 rounded-full bg-accent/20 blur-3xl" />
         </div>
 
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 md:grid-cols-2 md:py-24">
+        <Container className="grid items-center gap-10 py-16 md:grid-cols-2 md:py-24">
           <Reveal className="space-y-6">
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-card/80 px-3.5 py-1.5 text-xs font-medium text-primary shadow-soft">
               <YarnBall className="size-4" /> feito à mão, com tempo e carinho
             </span>
-            <h1 className="font-heading text-5xl leading-[1.02] font-semibold text-balance md:text-7xl">
+            <h1 className="font-heading text-[clamp(2.5rem,7.5vw,4.5rem)] leading-[1.05] font-semibold text-balance">
               Peças de crochê com <span className="italic text-primary">alma</span>
             </h1>
             <p className="max-w-md text-lg text-muted-foreground text-pretty">
@@ -91,11 +92,11 @@ export default async function HomePage() {
             <YarnBall className="absolute -right-2 top-6 size-12 animate-float text-primary drop-shadow" />
             <Heart className="absolute -bottom-1 left-6 size-8 fill-primary/15 text-primary/60" />
           </Reveal>
-        </div>
+        </Container>
       </section>
 
       {/* ── Destaques ── */}
-      <section className="mx-auto max-w-6xl px-4 py-12">
+      <Container as="section" className="py-12">
         <div className="mb-8 flex items-end justify-between gap-4">
           <div>
             <h2 className="flex items-center gap-2 font-heading text-3xl font-semibold">
@@ -132,15 +133,15 @@ export default async function HomePage() {
             As peças em destaque aparecerão aqui em breve. 🧶
           </div>
         )}
-      </section>
+      </Container>
 
-      <div className="mx-auto max-w-3xl px-4 py-4">
+      <Container size="narrow" className="py-4">
         <AnimatedStitch />
-      </div>
+      </Container>
 
       {/* ── Como funciona ── */}
       <section className="bg-secondary/30">
-        <div className="mx-auto max-w-6xl px-4 py-16">
+        <Container className="py-16">
           <Reveal>
             <h2 className="mb-10 text-center font-heading text-3xl font-semibold">Como funciona</h2>
           </Reveal>
@@ -162,11 +163,11 @@ export default async function HomePage() {
               </Reveal>
             ))}
           </div>
-        </div>
+        </Container>
       </section>
 
       {/* ── CTA ── */}
-      <section className="mx-auto max-w-6xl px-4 py-16">
+      <Container as="section" className="py-16">
         <Reveal>
           <div className="relative overflow-hidden rounded-[2.5rem] bg-primary px-8 py-14 text-center text-primary-foreground shadow-soft-lg md:py-20">
             <YarnBall className="absolute -left-6 -top-6 size-28 text-primary-foreground/10" />
@@ -182,7 +183,7 @@ export default async function HomePage() {
             </div>
           </div>
         </Reveal>
-      </section>
+      </Container>
     </>
   );
 }

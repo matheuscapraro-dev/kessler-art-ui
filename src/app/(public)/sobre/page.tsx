@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Heart, Package, Scissors, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Container } from "@/components/layout/container";
 import { AboutPhoto } from "@/components/about/about-photo";
 import { YarnBall } from "@/components/decor";
 import { Reveal } from "@/components/motion/reveal";
@@ -86,7 +87,7 @@ export default async function SobrePage() {
           <div className="absolute -right-20 top-40 size-72 rounded-full bg-accent/20 blur-3xl" />
         </div>
 
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 md:grid-cols-2 md:py-24">
+        <Container className="grid items-center gap-10 py-16 md:grid-cols-2 md:py-24">
           <Reveal className="space-y-6">
             <p className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-card/80 px-3.5 py-1.5 text-xs font-medium uppercase tracking-[0.18em] text-primary shadow-soft">
               <YarnBall className="size-4" /> a alma por trás dos fios
@@ -111,11 +112,11 @@ export default async function SobrePage() {
             />
             <YarnBall className="absolute -right-3 -top-3 size-12 animate-float text-primary drop-shadow" />
           </Reveal>
-        </div>
+        </Container>
       </section>
 
       {/* ── Mini-galeria do ateliê ── */}
-      <section className="mx-auto max-w-6xl px-4 py-6">
+      <Container as="section" className="py-6">
         <Reveal className="mb-6 text-center">
           <h2 className="flex items-center justify-center gap-2 font-heading text-2xl font-semibold">
             <YarnBall className="size-5 text-primary" /> Momentos do ateliê
@@ -137,14 +138,14 @@ export default async function SobrePage() {
             </Reveal>
           ))}
         </div>
-      </section>
+      </Container>
 
-      <div className="mx-auto max-w-3xl px-4 py-6">
+      <Container size="narrow" className="py-6">
         <AnimatedStitch />
-      </div>
+      </Container>
 
       {/* ── Nossa História ── */}
-      <section className="mx-auto max-w-6xl px-4 py-12">
+      <Container as="section" className="py-12">
         <div className="overflow-hidden rounded-[2.5rem] bg-secondary/30 p-6 shadow-soft md:p-12">
           <div className="flex flex-col items-center gap-10 md:flex-row-reverse">
             <Reveal className="w-full space-y-5 md:w-1/2">
@@ -168,10 +169,10 @@ export default async function SobrePage() {
             </div>
           </div>
         </div>
-      </section>
+      </Container>
 
       {/* ── O Processo ── */}
-      <section className="mx-auto max-w-5xl px-4 py-12 text-center">
+      <Container as="section" className="max-w-5xl py-12 text-center">
         <Reveal className="mx-auto mb-12 max-w-xl space-y-3">
           <h2 className="font-heading text-3xl font-semibold text-primary">O processo</h2>
           <p className="text-lg text-muted-foreground">Lento. Cuidadoso. Autêntico.</p>
@@ -198,10 +199,10 @@ export default async function SobrePage() {
             ))}
           </div>
         </div>
-      </section>
+      </Container>
 
       {/* ── Valores + CTA ── */}
-      <section className="mx-auto max-w-6xl px-4 py-12">
+      <Container as="section" className="py-12">
         <Reveal>
           <div className="relative overflow-hidden rounded-[2.5rem] bg-primary px-8 py-14 text-center text-primary-foreground shadow-soft-lg md:py-20">
             <YarnBall className="absolute -left-6 -top-6 size-28 text-primary-foreground/10" />
@@ -240,7 +241,7 @@ export default async function SobrePage() {
             </div>
           </div>
         </Reveal>
-      </section>
+      </Container>
     </>
   );
 }

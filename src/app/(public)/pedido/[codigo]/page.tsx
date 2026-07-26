@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CheckCircle2, MessageCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Container } from "@/components/layout/container";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatusTimeline, type TimelineStep } from "@/components/orders/status-timeline";
 import { TrackLookupForm } from "@/components/orders/track-lookup-form";
@@ -63,14 +64,14 @@ export default async function PedidoPage({ params }: { params: Promise<{ codigo:
           title="Pedido não encontrado"
           subtitle={`Não achei nada com o código "${codigo}". Confira se digitou certinho e tente de novo.`}
         />
-        <div className="mx-auto max-w-md space-y-3 px-4 pb-16">
+        <Container className="max-w-md space-y-3 pb-16">
           <div className="rounded-2xl border border-border bg-card p-6">
             <TrackLookupForm />
           </div>
           <p className="text-center text-xs text-muted-foreground">
             Códigos de pedido começam com KES; encomendas sob medida começam com ENC.
           </p>
-        </div>
+        </Container>
       </>
     );
   }
@@ -88,7 +89,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ codigo:
         title={`Pedido ${order.code}`}
         subtitle={`Feito em ${new Date(order.createdAt).toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" })}`}
       />
-      <div className="mx-auto max-w-2xl space-y-5 px-4 pb-16">
+      <Container className="max-w-2xl space-y-5 pb-16">
         {cancelled ? (
           <div className="flex items-start gap-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-6">
             <XCircle className="mt-0.5 size-5 shrink-0 text-destructive" />
@@ -166,7 +167,7 @@ export default async function PedidoPage({ params }: { params: Promise<{ codigo:
           </a>
           .
         </p>
-      </div>
+      </Container>
     </>
   );
 }

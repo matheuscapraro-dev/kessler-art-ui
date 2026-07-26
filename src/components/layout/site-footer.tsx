@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CrochetTrim, YarnBall } from "@/components/decor";
+import { Container } from "@/components/layout/container";
 import { FooterContact } from "@/components/layout/footer-contact";
 
 export function SiteFooter() {
@@ -9,7 +10,7 @@ export function SiteFooter() {
       <CrochetTrim className="text-secondary" />
 
       <div className="bg-secondary text-secondary-foreground">
-        <div className="mx-auto grid max-w-6xl gap-8 px-4 pb-12 pt-10 sm:grid-cols-2 md:grid-cols-3">
+        <Container className="grid gap-8 pb-12 pt-10 sm:grid-cols-2 md:grid-cols-3">
           <div>
             <p className="flex items-center gap-2 font-heading text-lg font-semibold">
               <YarnBall className="size-5 text-primary" /> Kessler Art Crochê
@@ -30,7 +31,7 @@ export function SiteFooter() {
           </nav>
 
           <FooterContact />
-        </div>
+        </Container>
 
         <div className="border-t border-foreground/10 py-4 text-center text-xs text-secondary-foreground/60">
           © {new Date().getFullYear()} Kessler Art Crochê · feito à mão com 🧶

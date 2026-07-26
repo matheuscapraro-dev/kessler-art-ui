@@ -262,7 +262,7 @@ export function ProductPurchaseDialog({
                         <FormItem>
                           <FormLabel>Telefone *</FormLabel>
                           <FormControl>
-                            <Input placeholder="(47) 99999-9999" {...field} />
+                            <Input type="tel" autoComplete="tel" placeholder="(47) 99999-9999" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

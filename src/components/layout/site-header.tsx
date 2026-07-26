@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Container } from "@/components/layout/container";
 import { YarnBall } from "@/components/decor";
 import { UserMenu } from "@/components/layout/user-menu";
 import {
@@ -28,14 +29,14 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+      <Container className="flex h-16 items-center justify-between gap-3">
         <Link href="/" className="flex items-center gap-2">
           <YarnBall className="size-7 shrink-0 text-primary" />
           <span className="flex flex-col leading-none">
             <span className="font-heading text-xl font-semibold tracking-tight text-foreground">
               Kessler
             </span>
-            <span className="text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground">
+            <span className="text-[0.7rem] uppercase tracking-[0.25em] text-muted-foreground max-[379px]:hidden">
               art crochê
             </span>
           </span>
@@ -106,7 +107,7 @@ export function SiteHeader() {
             </SheetContent>
           </Sheet>
         </div>
-      </div>
+      </Container>
     </header>
   );
 }

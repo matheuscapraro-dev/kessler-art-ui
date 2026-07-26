@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock, MessageCircle, Package, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Container } from "@/components/layout/container";
 import { ProductGallery } from "@/components/catalog/product-gallery";
 import { ProductCard } from "@/components/catalog/product-card";
 import { ProductPurchasePanel } from "@/components/catalog/product-purchase-panel";
@@ -65,7 +66,7 @@ export default async function ProductPage({
   const isReady = product.availability === "ReadyToBuy";
 
   return (
-    <article className="mx-auto max-w-6xl px-4 py-8 md:py-12">
+    <Container as="article" className="py-8 md:py-12">
       <Link
         href="/galeria"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
@@ -140,6 +141,6 @@ export default async function ProductPage({
           </div>
         </section>
       )}
-    </article>
+    </Container>
   );
 }

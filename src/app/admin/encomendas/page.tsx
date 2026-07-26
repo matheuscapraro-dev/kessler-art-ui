@@ -264,18 +264,18 @@ export default function AdminAteliePage() {
       </div>
 
       {/* filtros */}
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por código, título, cliente…"
-            className="h-8 w-64 pl-8"
+            className="h-8 w-full pl-8"
           />
         </div>
         <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as WorkType | "all")}>
-          <SelectTrigger size="sm" className="w-44">
+          <SelectTrigger size="sm" className="w-full sm:w-44">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -293,14 +293,15 @@ export default function AdminAteliePage() {
       {isLoading ? (
         <BoardSkeleton />
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        // No mobile o quadro rola coluna a coluna (scroll-snap), estilo Trello.
+        <div className="flex gap-4 overflow-x-auto pb-4 max-md:-mx-4 max-md:snap-x max-md:snap-mandatory max-md:scroll-px-4 max-md:px-4">
           {commissionStatusOrder.map((status) => {
             const cards = byStatus(status);
             const total = columnTotal(cards);
             return (
               <section
                 key={status}
-                className="flex w-72 shrink-0 flex-col"
+                className="flex w-72 shrink-0 flex-col max-md:w-[80vw] max-md:max-w-80 max-md:snap-start"
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={() => drop(status, null)}
               >

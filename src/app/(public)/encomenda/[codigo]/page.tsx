@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ChevronRight, MessageCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Container } from "@/components/layout/container";
 import { PageHeader } from "@/components/layout/page-header";
 import { StatusTimeline, type TimelineStep } from "@/components/orders/status-timeline";
 import { TrackLookupForm } from "@/components/orders/track-lookup-form";
@@ -79,14 +80,14 @@ export default async function EncomendaPage({ params }: { params: Promise<{ codi
           title="Encomenda não encontrada"
           subtitle={`Não achei nada com o código "${codigo}". Confira se digitou certinho e tente de novo.`}
         />
-        <div className="mx-auto max-w-md space-y-3 px-4 pb-16">
+        <Container className="max-w-md space-y-3 pb-16">
           <div className="rounded-2xl border border-border bg-card p-6">
             <TrackLookupForm />
           </div>
           <p className="text-center text-xs text-muted-foreground">
             Códigos de encomenda começam com ENC; pedidos da lojinha começam com KES.
           </p>
-        </div>
+        </Container>
       </>
     );
   }
@@ -112,7 +113,7 @@ export default async function EncomendaPage({ params }: { params: Promise<{ codi
         title={`Encomenda ${commission.code}`}
         subtitle={`Enviada em ${new Date(commission.createdAt).toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" })}`}
       />
-      <div className="mx-auto max-w-2xl space-y-5 px-4 pb-16">
+      <Container className="max-w-2xl space-y-5 pb-16">
         {refused ? (
           <div className="space-y-3 rounded-2xl border border-destructive/30 bg-destructive/5 p-6">
             <div className="flex items-start gap-3">
@@ -212,7 +213,7 @@ export default async function EncomendaPage({ params }: { params: Promise<{ codi
           </a>
           .
         </p>
-      </div>
+      </Container>
     </>
   );
 }

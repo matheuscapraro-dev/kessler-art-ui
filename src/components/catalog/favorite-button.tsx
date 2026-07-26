@@ -25,7 +25,8 @@ export function FavoriteButton({
       aria-label={favorited ? "Remover dos favoritos" : "Adicionar aos favoritos"}
       aria-pressed={favorited}
       className={cn(
-        "flex size-8 items-center justify-center rounded-full bg-background/85 shadow-soft backdrop-blur transition-transform hover:scale-110 active:scale-95",
+        // after:-inset-2 estende a área de toque para ~48px sem crescer o visual.
+        "relative flex size-8 items-center justify-center rounded-full bg-background/85 shadow-soft backdrop-blur transition-transform after:absolute after:-inset-2 hover:scale-110 active:scale-95",
         className
       )}
       onClick={(e) => {

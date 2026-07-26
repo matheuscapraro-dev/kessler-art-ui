@@ -119,7 +119,8 @@ export function WorkCard({
                 variant="ghost"
                 size="icon-xs"
                 title={`Avançar para ${commissionStatusLabel[next]}`}
-                className="text-muted-foreground opacity-0 transition-opacity hover:text-primary group-hover:opacity-100"
+                // Touch não tem hover: as ações ficam sempre visíveis (e maiores) lá.
+                className="text-muted-foreground opacity-0 transition-opacity hover:text-primary group-hover:opacity-100 pointer-coarse:size-8 pointer-coarse:opacity-100"
                 onClick={() => onMoveTo(next)}
               >
                 <ChevronRight />
@@ -132,7 +133,7 @@ export function WorkCard({
                 <Button
                   variant="ghost"
                   size="icon-xs"
-                  className="-mr-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 data-[state=open]:opacity-100"
+                  className="-mr-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 data-[state=open]:opacity-100 pointer-coarse:size-8 pointer-coarse:opacity-100"
                 >
                   <MoreVertical />
                   <span className="sr-only">Ações</span>

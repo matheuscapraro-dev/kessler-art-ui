@@ -55,42 +55,45 @@ export default function AdminPedidosPage() {
       ) : (
         <ul className="space-y-3">
           {orders.map((o) => (
-            <li key={o.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-4">
-              <div className="min-w-0 flex-1">
-                <p className="font-medium">
-                  {o.code} · {o.customerName}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {o.itemCount} item(s) · {formatPrice(o.totalAmount)} ·{" "}
-                  {new Date(o.createdAt).toLocaleDateString("pt-BR")}
-                </p>
+            <li key={o.id} className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center">
+              <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium">
+                    {o.code} · {o.customerName}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {o.itemCount} item(s) · {formatPrice(o.totalAmount)} ·{" "}
+                    {new Date(o.createdAt).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+                <Badge variant={o.paymentStatus === "Pago" ? "default" : "secondary"}>
+                  {o.paymentStatus}
+                </Badge>
               </div>
 
-              <Badge variant={o.paymentStatus === "Pago" ? "default" : "secondary"}>
-                {o.paymentStatus}
-              </Badge>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Select
+                  value={o.status}
+                  onValueChange={(v) => updateStatus.mutate({ id: o.id, status: v as OrderStatus })}
+                >
+                  <SelectTrigger className="min-w-0 flex-1 sm:w-40 sm:flex-none">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statuses.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {orderStatusLabel[s]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <Select
-                value={o.status}
-                onValueChange={(v) => updateStatus.mutate({ id: o.id, status: v as OrderStatus })}
-              >
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {statuses.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {orderStatusLabel[s]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {o.paymentStatus !== "Pago" && (
-                <Button size="sm" variant="outline" onClick={() => markPaid.mutate(o.id)}>
-                  Marcar pago
-                </Button>
-              )}
+                {o.paymentStatus !== "Pago" && (
+                  <Button size="sm" variant="outline" onClick={() => markPaid.mutate(o.id)}>
+                    Marcar pago
+                  </Button>
+                )}
+              </div>
             </li>
           ))}
         </ul>

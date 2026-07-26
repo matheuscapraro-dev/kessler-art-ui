@@ -391,7 +391,7 @@ export function WorkSheet({
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label htmlFor="w-cp">Telefone {isEncomenda && "*"}</Label>
-                  <Input id="w-cp" value={form.customerPhone} onChange={(e) => set("customerPhone", e.target.value)} placeholder="(47) 99999-9999" />
+                  <Input id="w-cp" type="tel" autoComplete="tel" value={form.customerPhone} onChange={(e) => set("customerPhone", e.target.value)} placeholder="(47) 99999-9999" />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="w-ce">E-mail</Label>

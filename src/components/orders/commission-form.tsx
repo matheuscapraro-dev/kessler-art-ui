@@ -98,7 +98,7 @@ export function CommissionForm() {
         onSubmit={form.handleSubmit((values) => mutation.mutate(values))}
         className="space-y-8"
       >
-        <section className="space-y-5 rounded-2xl border border-border bg-card p-6">
+        <section className="space-y-5 rounded-2xl border border-border bg-card p-5 sm:p-6">
           <h2 className="font-heading text-xl">O que você imaginou?</h2>
 
           <FormField
@@ -186,7 +186,7 @@ export function CommissionForm() {
           </div>
         </section>
 
-        <section className="space-y-5 rounded-2xl border border-border bg-card p-6">
+        <section className="space-y-5 rounded-2xl border border-border bg-card p-5 sm:p-6">
           <h2 className="font-heading text-xl">Como te encontro?</h2>
           <div className="grid gap-5 sm:grid-cols-2">
             <FormField
@@ -222,7 +222,7 @@ export function CommissionForm() {
                 <FormItem>
                   <FormLabel>Telefone *</FormLabel>
                   <FormControl>
-                    <Input placeholder="(47) 99999-9999" {...field} />
+                    <Input type="tel" autoComplete="tel" placeholder="(47) 99999-9999" {...field} />
                   </FormControl>
                   <FormDescription>É por aqui que combinamos os detalhes.</FormDescription>
                   <FormMessage />

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Container } from "@/components/layout/container";
 import { PageHeader } from "@/components/layout/page-header";
 import { CategoryFilter } from "@/components/catalog/category-filter";
 import { AvailabilityFilter } from "@/components/catalog/availability-filter";
@@ -41,7 +42,7 @@ export default async function GaleriaPage({
         title="Galeria"
         subtitle="Cada peça é única, feita ponto a ponto. Leve uma que já está pronta ou encomende a sua, do seu jeito."
       />
-      <div className="mx-auto max-w-6xl space-y-6 px-4 pb-8">
+      <Container className="space-y-6 pb-8">
         <div className="space-y-4">
           <div className="space-y-1.5">
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
@@ -74,7 +75,7 @@ export default async function GaleriaPage({
           products={products}
           emptyMessage="Nenhuma peça com esses filtros por enquanto — que tal encomendar a sua?"
         />
-      </div>
+      </Container>
     </>
   );
 }
