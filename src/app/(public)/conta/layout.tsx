@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { Heart, LogOut, Package, Sparkles, UserRound } from "lucide-react";
+import { Heart, LogOut, Package, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-header";
@@ -12,7 +12,6 @@ import { clearAccessTokenCache } from "@/lib/session-token";
 const nav = [
   { href: "/conta", label: "Meu perfil", icon: UserRound, exact: true },
   { href: "/conta/pedidos", label: "Meus pedidos", icon: Package },
-  { href: "/conta/encomendas", label: "Minhas encomendas", icon: Sparkles },
   { href: "/conta/favoritos", label: "Favoritos", icon: Heart },
 ];
 

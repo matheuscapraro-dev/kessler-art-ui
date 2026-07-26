@@ -54,7 +54,7 @@ export function CommissionSuccess({
           </p>
           <Button asChild variant="outline" size="sm" className="mt-3">
             <a
-              href={`/cadastrar?email=${encodeURIComponent(commission.customerEmail)}&callbackUrl=${encodeURIComponent("/conta/encomendas")}`}
+              href={`/cadastrar?email=${encodeURIComponent(commission.customerEmail)}&callbackUrl=${encodeURIComponent("/conta/pedidos")}`}
             >
               Criar minha conta
             </a>

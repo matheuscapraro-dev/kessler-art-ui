@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { Heart, LayoutDashboard, LogOut, Package, Sparkles, UserRound } from "lucide-react";
+import { Heart, LayoutDashboard, LogOut, Package, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -75,11 +75,6 @@ export function UserMenu() {
         <DropdownMenuItem asChild>
           <Link href="/conta/pedidos">
             <Package className="size-4" /> Meus pedidos
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/conta/encomendas">
-            <Sparkles className="size-4" /> Minhas encomendas
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
