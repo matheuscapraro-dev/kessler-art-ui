@@ -307,7 +307,7 @@ export function ImportImageDialog({ open, onOpenChange, doc, onImport }: Props) 
             </div>
 
             {/* Prévia do gráfico que vai sair — não só da imagem original. */}
-            <div className="space-y-1.5 sm:w-[280px]">
+            <div className="space-y-1.5 sm:w-70">
               <div className="flex items-baseline justify-between gap-2">
                 <p className="text-xs font-medium text-muted-foreground">Prévia do gráfico</p>
                 {chart && (
