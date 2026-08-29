@@ -177,7 +177,7 @@ function Panel({ title, children, className }: { title: string; children: React.
   );
 }
 
-export function ChartEditor({ craft }: { craft: Craft }) {
+export function ChartEditor({ craft, startImporting = false }: { craft: Craft; startImporting?: boolean }) {
   const api = useChartDoc(craft);
   const { spec, doc, ready, update, replace, undo, redo, canUndo, canRedo } = api;
   const other = CRAFTS[craft === "croche" ? "trico" : "croche"];
@@ -193,7 +193,7 @@ export function ChartEditor({ craft }: { craft: Craft }) {
   const [previewRepeat, setPreviewRepeat] = useState(true);
   const [showRepeatLines, setShowRepeatLines] = useState(true);
   const [previewWidth, setPreviewWidth] = useState(0);
-  const [importOpen, setImportOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(startImporting);
 
   const gridCanvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);

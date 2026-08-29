@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutGrid } from "lucide-react";
+import { ImagePlus, LayoutGrid } from "lucide-react";
 import { CRAFTS } from "@/lib/chart-editor/crafts";
 
 // Escolha da técnica: cada uma tem o seu editor (mesmo motor, preview e
@@ -31,6 +31,28 @@ export default function GraficoHubPage() {
             <p className="mt-4 text-sm font-medium text-primary group-hover:underline">Abrir editor →</p>
           </Link>
         ))}
+      </div>
+
+      {/* Atalho do caminho antigo (imagem → gráfico): o mesmo gerador, agora
+          desembocando no editor, com a técnica escolhida aqui. */}
+      <div className="rounded-2xl border border-dashed border-border bg-card p-5">
+        <p className="flex items-center gap-2 font-heading text-lg">
+          <ImagePlus className="size-5 text-primary" /> Partir de uma imagem
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Jogue um desenho ou foto: ele vira grade de pontos, paleta de fios e receita — e continua editável no editor.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {crafts.map((c) => (
+            <Link
+              key={c.key}
+              href={`/admin/grafico/${c.key}?importar=1`}
+              className="rounded-full border border-border px-4 py-2 text-sm font-medium transition-colors hover:border-primary/50 hover:text-primary"
+            >
+              Importar em {c.shortTitle.toLowerCase()}
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   );
