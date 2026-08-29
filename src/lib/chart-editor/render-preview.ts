@@ -83,6 +83,12 @@ export function drawPreview(canvas: HTMLCanvasElement, doc: ChartDoc, craft: Cra
       }
       const colors = palette[v];
       if (!colors) continue;
+      if (stitchW < 4) {
+        // Ponto minúsculo: a textura não aparece, só pinta o bloco.
+        ctx.fillStyle = colors.base;
+        ctx.fillRect(C * stitchW, y, stitchW + 0.5, stitchH + 0.5);
+        continue;
+      }
       craft.drawStitch(ctx, C * stitchW, y, stitchW, stitchH, colors);
     }
   }

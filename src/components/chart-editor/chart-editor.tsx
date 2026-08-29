@@ -66,7 +66,6 @@ import {
   shiftDoc,
   toJson,
   updateYarn,
-  type ChartDoc,
   type Craft,
   type Mirror,
   type Point,
